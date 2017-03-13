@@ -84,6 +84,8 @@ public class MainSketch extends PApplet {
 			// アニメーション画像の読み込み
 			AnimatedImage anmImg = new AnimatedImage();
 			anmImg.setImg(new PImage(img));
+
+			// 乱数によって描画する初期座標を設定
 			anmImg.setX(rand.nextInt(500) + 1);
 			anmImg.setY(rand.nextInt(200) + 1);
 			if (_animatedImgList.size() % 2 == 0) {
