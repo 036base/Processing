@@ -31,7 +31,7 @@ public class MainSketch extends PApplet {
 	private PImage _backgroundImg;
 	private List<AnimatedImage> _animatedImgList;
 
-	private int ANIMATION_SPEED = 2;
+	private int ANIMATION_SPEED = 1;
 
 	public static void main(String[] args) {
 
@@ -60,6 +60,8 @@ public class MainSketch extends PApplet {
 	 */
 	public void settings() {
 		size(1024, 593);
+		//size(displayWidth, displayHeight);
+		//fullScreen();
 	}
 
 	/**
@@ -76,25 +78,36 @@ public class MainSketch extends PApplet {
 		// アニメーション画像をリストに追加
 		_animatedImgList = new ArrayList<AnimatedImage>();
 		for (final File file : fileList) {
+
 			// 画像透過処理
-			BufferedImage img = ImageUtil.Transparency(file, Color.WHITE);
+			BufferedImage bimg = ImageUtil.Transparency(file, Color.WHITE);
 
 			Random rand = new Random();
-
-			// アニメーション画像の読み込み
 			AnimatedImage anmImg = new AnimatedImage();
-			anmImg.setImg(new PImage(img));
 
-			// 乱数によって描画する初期座標を設定
-			anmImg.setX(rand.nextInt(500) + 1);
-			anmImg.setY(rand.nextInt(200) + 1);
-			if (_animatedImgList.size() % 2 == 0) {
-				anmImg.setDirX(-1);
-				anmImg.setDirY(-1);
-			} else {
+			// 初期座標を設定
+			anmImg.setX((rand.nextInt(width - bimg.getWidth()) + 1));
+			anmImg.setY((rand.nextInt(height - bimg.getHeight()) + 1));
+
+			// 進行方向を設定
+			if (rand.nextBoolean()) {
 				anmImg.setDirX(1);
-				anmImg.setDirY(1);
+			} else {
+				anmImg.setDirX(-1);
 			}
+			if (rand.nextBoolean()) {
+				anmImg.setDirY(1);
+			} else {
+				anmImg.setDirY(-1);
+			}
+
+			// アニメーション画像設定（※基本画像は右向き）
+			if (anmImg.getDirX() < 0) {
+				// 左右反転
+				bimg = ImageUtil.FlipHorizontal(bimg);
+			}
+			anmImg.setImg(new PImage(bimg));
+
 			_animatedImgList.add(anmImg);
 		}
 	}
@@ -107,10 +120,10 @@ public class MainSketch extends PApplet {
 		// 背景画像を描画
 		background(_backgroundImg);
 
-		PImage img;
+		PImage pimg;
 		int x, y, dirX, dirY;
 		for (int i = 0; i < _animatedImgList.size(); i++) {
-			img = _animatedImgList.get(i).getImg();
+			pimg = _animatedImgList.get(i).getImg();
 			x = _animatedImgList.get(i).getX();
 			y = _animatedImgList.get(i).getY();
 			dirX = _animatedImgList.get(i).getDirX();
@@ -119,18 +132,32 @@ public class MainSketch extends PApplet {
 			x += dirX * ANIMATION_SPEED;
 			y += dirY * ANIMATION_SPEED;
 
-			if ((x < 0) || (x > width - img.width)) {
+			if ((x < 0) || (x > width - pimg.width)) {
 				dirX = -dirX;
+
+				//TODO:Processingでメモリ消費を抑えてBufferedImageの内容をPImageにコピーする
+				// 参考：http://junkato.jp/ja/blog/2013/01/28/processing-efficient-copy-from-bufferedimage-to-pimage/
+
+				// 画像を左右反転
+				BufferedImage bimgFH = ImageUtil.PImage2BImage(pimg);
+				bimgFH = ImageUtil.FlipHorizontal(bimgFH);
+				pimg = new PImage(bimgFH);
+
 			}
 
-			if ((y < 0) || (y > height - img.height)) {
+			if ((y < 0) || (y > height - pimg.height)) {
 				dirY = -dirY;
 			}
 
-			// 画像を描画
-			image(img, x, y);
+			// TODO:画像リサイズ
+			//img.resize(0, img.height + (dirY * ANIMATION_SPEED));
 
-			// 座標情報を保持
+			//TODO:描画順を変えて画像の重なり順が変えれたら。。。
+			// 画像を描画
+			image(pimg, x, y);
+
+			// 変更情報を保持
+			_animatedImgList.get(i).setImg(pimg);
 			_animatedImgList.get(i).setX(x);
 			_animatedImgList.get(i).setY(y);
 			_animatedImgList.get(i).setDirX(dirX);

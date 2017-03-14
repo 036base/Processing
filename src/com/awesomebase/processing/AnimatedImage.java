@@ -12,15 +12,15 @@ public class AnimatedImage {
 	private PImage _img;		// アニメーションイメージ
 	private int _x = 0;		// X座標
 	private int _y = 0;		// Y座標
-	private int _dirX = 1;	//
-	private int _dirY = 1;	//
+	private int _dirX = 1;		// X軸進行方向
+	private int _dirY = 1;		// Y軸進行方向
 
 	public PImage getImg() {
 		return _img;
 	}
 
 	public void setImg(PImage img) {
-		this._img = img;
+		_img = img;
 	}
 
 	public int getX() {
@@ -28,7 +28,7 @@ public class AnimatedImage {
 	}
 
 	public void setX(int x) {
-		this._x = x;
+		_x = x;
 	}
 
 	public int getY() {
@@ -36,7 +36,7 @@ public class AnimatedImage {
 	}
 
 	public void setY(int y) {
-		this._y = y;
+		_y = y;
 	}
 
 	public int getDirX() {
