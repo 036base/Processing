@@ -70,8 +70,8 @@ public class ImageUtil {
 			// 画像を取得
 			BufferedImage readImg = ImageIO.read(file);
 
-			int width = readImg.getWidth(); // 横の幅取得
-			int height = readImg.getHeight(); // 縦の高さ取得
+			int width = readImg.getWidth();	// 横の幅取得
+			int height = readImg.getHeight();	// 縦の高さ取得
 
 			bimg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
@@ -82,6 +82,45 @@ public class ImageUtil {
 						bimg.setRGB(x, y, 0);
 					} else {
 						// 白以外はそのまま
+						bimg.setRGB(x, y, readImg.getRGB(x, y));
+					}
+				}
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			bimg = null;
+		}
+
+		return bimg;
+
+	}
+
+	/**
+	 * 透過処理
+	 *
+	 * @param file
+	 * @param rgb
+	 */
+	public static BufferedImage Transparency(File file, int rgb) {
+
+		BufferedImage bimg = null;
+		try {
+			// 画像を取得
+			BufferedImage readImg = ImageIO.read(file);
+
+			int width = readImg.getWidth();	// 横の幅取得
+			int height = readImg.getHeight();	// 縦の高さ取得
+
+			bimg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+
+			for (int y = 0; y < height; ++y) {
+				for (int x = 0; x < width; ++x) {
+					if (compareRgb(readImg.getRGB(x, y), rgb)) {
+						// 対象色を透過
+						bimg.setRGB(x, y, 0);
+					} else {
+						// 対象色以外はそのまま
 						bimg.setRGB(x, y, readImg.getRGB(x, y));
 					}
 				}
@@ -122,6 +161,26 @@ public class ImageUtil {
 
 	}
 
+
+
+	/**
+	 * RGB値を比較（透過補正値用）
+	 *
+	 * @param rgb1
+	 * @param rgb2
+	 * @return
+	 */
+	private static boolean compareRgb(int rgb1, int rgb2) {
+		for (int r = 255; r >= rgb2; r--) {
+			for (int g = 255; g >= rgb2; g--) {
+				for (int b = 255; b >= rgb2; b--) {
+					Color color = new Color(r,g,b);
+					if (rgb1 == color.getRGB()) return true;
+				}
+			}
+		}
+		return false;
+	}
 
 
 

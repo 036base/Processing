@@ -90,6 +90,10 @@ public class MainSketch extends PApplet {
 
 			// 画像透過処理
 			BufferedImage bimg = ImageUtil.Transparency(file, Color.WHITE);
+			// 補正値により画像透過処理（★処理に時間がかかる...）
+			//String correction_value = _properties.getProperty("correction_value");
+			//bimg = ImageUtil.Transparency(file, Integer.parseInt(correction_value));
+
 
 			Random rand = new Random();
 			AnimatedImage anmImg = new AnimatedImage();
