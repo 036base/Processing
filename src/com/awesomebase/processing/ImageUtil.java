@@ -5,8 +5,12 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.List;
 
 import javax.imageio.ImageIO;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.FileFilterUtils;
 
 import processing.core.PApplet;
 import processing.core.PConstants;
@@ -116,6 +120,36 @@ public class ImageUtil {
 
 		return bimg;
 
+	}
+
+
+
+
+
+
+	/**
+	 * 透過処理テスト用
+	 */
+	public void Transparency(String dir_animated_image) {
+		try {
+			// 設定ファイルの対象フォルダから「.png」ファイルを取得
+			final List<File> fileList = (List<File>) FileUtils.listFiles(new File(dir_animated_image), FileFilterUtils.suffixFileFilter(".png"), FileFilterUtils.trueFileFilter());
+
+			for (final File file : fileList) {
+
+				System.out.println(file.getPath());
+
+				// 画像透過処理
+				BufferedImage writeImg = ImageUtil.Transparency(file, Color.WHITE);
+
+				// 画像を書き出し
+				ImageIO.write(writeImg, "png", new File(file.getAbsolutePath().replace(".png", "_t.png")));
+
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 }
