@@ -9,11 +9,12 @@ import processing.core.PImage;
  *
  */
 public class AnimatedImage {
-	private PImage _img;		// アニメーションイメージ
-	private int _x = 0;		// X座標
-	private int _y = 0;		// Y座標
-	private int _dirX = 1;		// X軸進行方向
-	private int _dirY = 1;		// Y軸進行方向
+	private PImage _img;			// アニメーションイメージ
+	private int _x = 0;			// X座標
+	private int _y = 0;			// Y座標
+	private int _dirX = 1;			// X軸進行方向
+	private int _dirY = 1;			// Y軸進行方向
+	private double _scale = 1.0;	// 倍率
 
 	public PImage getImg() {
 		return _img;
@@ -53,6 +54,14 @@ public class AnimatedImage {
 
 	public void setDirY(int dirY) {
 		_dirY = dirY;
+	}
+
+	public double getScale() {
+		return _scale;
+	}
+
+	public void setScale(double scale) {
+		_scale = scale;
 	}
 
 }

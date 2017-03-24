@@ -38,7 +38,6 @@ public class MainSketch extends PApplet {
 
 	private static int _width, _height;
 
-	private int ANIMATION_SPEED = 1;
 
 
 	public static void main(String[] args) {
@@ -63,9 +62,15 @@ public class MainSketch extends PApplet {
 	 */
 	@Override
 	public void settings() {
-		size(1024, 593);
-		//size(displayWidth, displayHeight);
-		//fullScreen();
+		try {
+			// TODO:可能であれば背景画像のサイズにする、もしくは設定ファイルに定義する
+			size(1600, 900);
+			//size(displayWidth, displayHeight);
+			//fullScreen();
+		} catch (Exception e) {
+			exit();
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -73,55 +78,60 @@ public class MainSketch extends PApplet {
 	 */
 	@Override
 	public void setup() {
+		try {
+			// Processingメソッド以外で変数が読み取れないため保持
+			_width = width;
+			_height = height;
 
-		_width = width;
-		_height = height;
+			// 背景画像の読み込み、描画
+			_backgroundImg = loadImage(_properties.getProperty("file_background_image"));
+			background(_backgroundImg);
 
-		// 背景画像の読み込み、描画
-		_backgroundImg = loadImage(_properties.getProperty("file_background_image"));
-		background(_backgroundImg);
+			// アニメーション画像フォルダから拡張子が「.png」のファイルを取得
+			final List<File> fileList = (List<File>) FileUtils.listFiles(new File(_properties.getProperty("dir_animated_image")), FileFilterUtils.suffixFileFilter(".png"), FileFilterUtils.trueFileFilter());
 
-		// アニメーション画像フォルダから拡張子が「.png」のファイルを取得
-		final List<File> fileList = (List<File>) FileUtils.listFiles(new File(_properties.getProperty("dir_animated_image")), FileFilterUtils.suffixFileFilter(".png"), FileFilterUtils.trueFileFilter());
+			// アニメーション画像をリストに追加
+			_animatedImgList = new ArrayList<AnimatedImage>();
+			for (final File file : fileList) {
 
-		// アニメーション画像をリストに追加
-		_animatedImgList = new ArrayList<AnimatedImage>();
-		for (final File file : fileList) {
-
-			// 画像透過処理
-			BufferedImage bimg = ImageUtil.Transparency(file, Color.WHITE);
-			// 補正値により画像透過処理（★処理に時間がかかる...）
-			//String correction_value = _properties.getProperty("correction_value");
-			//bimg = ImageUtil.Transparency(file, Integer.parseInt(correction_value));
+				// 画像透過処理
+				BufferedImage bimg = ImageUtil.Transparency(file, Color.WHITE);
+				// 補正値により画像透過処理（★処理に時間がかかる...）
+				//String correction_value = _properties.getProperty("correction_value");
+				//bimg = ImageUtil.Transparency(file, Integer.parseInt(correction_value));
 
 
-			Random rand = new Random();
-			AnimatedImage anmImg = new AnimatedImage();
+				Random rand = new Random();
+				AnimatedImage anmImg = new AnimatedImage();
 
-			// 初期座標を設定
-			anmImg.setX((rand.nextInt(width - bimg.getWidth()) + 1));
-			anmImg.setY((rand.nextInt(height - bimg.getHeight()) + 1));
+				// 初期座標を設定
+				anmImg.setX((rand.nextInt(width - bimg.getWidth()) + 1));
+				anmImg.setY((rand.nextInt(height - bimg.getHeight()) + 1));
 
-			// 進行方向を設定
-			if (rand.nextBoolean()) {
-				anmImg.setDirX(1);
-			} else {
-				anmImg.setDirX(-1);
+				// 進行方向を設定
+				if (rand.nextBoolean()) {
+					anmImg.setDirX(1);
+				} else {
+					anmImg.setDirX(-1);
+				}
+				if (rand.nextBoolean()) {
+					anmImg.setDirY(1);
+				} else {
+					anmImg.setDirY(-1);
+				}
+
+				// アニメーション画像設定（※基本画像は左向き）
+				if (anmImg.getDirX() > 0) {
+					// 左右反転
+					bimg = ImageUtil.FlipHorizontal(bimg);
+				}
+				anmImg.setImg(new PImage(bimg));
+
+				_animatedImgList.add(anmImg);
 			}
-			if (rand.nextBoolean()) {
-				anmImg.setDirY(1);
-			} else {
-				anmImg.setDirY(-1);
-			}
-
-			// アニメーション画像設定（※基本画像は右向き）
-			if (anmImg.getDirX() < 0) {
-				// 左右反転
-				bimg = ImageUtil.FlipHorizontal(bimg);
-			}
-			anmImg.setImg(new PImage(bimg));
-
-			_animatedImgList.add(anmImg);
+		} catch (Exception e) {
+			exit();
+			e.printStackTrace();
 		}
 	}
 
@@ -130,58 +140,80 @@ public class MainSketch extends PApplet {
 	 */
 	@Override
 	public void draw() {
+		try {
+			// 背景画像を描画
+			background(_backgroundImg);
 
-		// 背景画像を描画
-		background(_backgroundImg);
+			PImage pimg;
+			WritableRaster wr;
+			int x, y, dirX, dirY;
+			double scale;
+			for (int i = 0; i < _animatedImgList.size(); i++) {
+				pimg = _animatedImgList.get(i).getImg();
+				x = _animatedImgList.get(i).getX();
+				y = _animatedImgList.get(i).getY();
+				dirX = _animatedImgList.get(i).getDirX();
+				dirY = _animatedImgList.get(i).getDirY();
+				scale = _animatedImgList.get(i).getScale();
 
-		PImage pimg;
-		WritableRaster wr;
-		int x, y, dirX, dirY;
-		for (int i = 0; i < _animatedImgList.size(); i++) {
-			pimg = _animatedImgList.get(i).getImg();
-			x = _animatedImgList.get(i).getX();
-			y = _animatedImgList.get(i).getY();
-			dirX = _animatedImgList.get(i).getDirX();
-			dirY = _animatedImgList.get(i).getDirY();
+				x += dirX * Constants.ANIMATION_SPEED;
+				y += dirY * Constants.ANIMATION_SPEED;
 
-			x += dirX * ANIMATION_SPEED;
-			y += dirY * ANIMATION_SPEED;
+				if ((x < 0) || (x > width - pimg.width)) {
+					// X軸進行方向を逆転
+					dirX = -dirX;
 
-			if ((x < 0) || (x > width - pimg.width)) {
-				dirX = -dirX;
+					// 画像を左右反転
+					BufferedImage bimgFH = ImageUtil.PImage2BImage(pimg);
+					bimgFH = ImageUtil.FlipHorizontal(bimgFH);
+//					pimg = new PImage(bimgFH);
+					//TODO:Processingでメモリ消費を抑えてBufferedImageの内容をPImageにコピーする
+					// 参考：http://junkato.jp/ja/blog/2013/01/28/processing-efficient-copy-from-bufferedimage-to-pimage/
+					DataBufferInt dbi = new DataBufferInt(pimg.pixels, pimg.pixels.length);
+					wr = Raster.createWritableRaster(bimgFH.getSampleModel(), dbi, new Point(0, 0));
+					bimgFH.copyData(wr);
+					pimg.updatePixels();
+				}
 
-				// 画像を左右反転
-				BufferedImage bimgFH = ImageUtil.PImage2BImage(pimg);
-				bimgFH = ImageUtil.FlipHorizontal(bimgFH);
-//				pimg = new PImage(bimgFH);
-				//TODO:Processingでメモリ消費を抑えてBufferedImageの内容をPImageにコピーする
-				// 参考：http://junkato.jp/ja/blog/2013/01/28/processing-efficient-copy-from-bufferedimage-to-pimage/
-				DataBufferInt dbi = new DataBufferInt(pimg.pixels, pimg.pixels.length);
-				wr = Raster.createWritableRaster(bimgFH.getSampleModel(), dbi, new Point(0, 0));
-				bimgFH.copyData(wr);
-				pimg.updatePixels();
+				if ((y < 0) || (y > height - pimg.height)) {
+					// Y軸進行方向を逆転
+					dirY = -dirY;
+				}
+
+				// リサイズ前の画像を保持
+				_animatedImgList.get(i).setImg(pimg.copy());
+
+				// 画像リサイズ
+				if (random(1000) < 15) {
+					if (scale < Constants.MAX_SCALE) {
+						scale = scale + 0.02;
+					}
+				} else if (random(1000) >= 995) {
+					if (scale > Constants.MIN_SCALE) {
+						scale = scale - 0.02;
+					}
+				}
+				int reWidth = (int)(pimg.width * scale);
+				int reHeight = (int)(pimg.height * scale);
+				pimg.resize(reWidth , reHeight);
+
+
+				// 画像の情報を保持
+				_animatedImgList.get(i).setX(x);
+				_animatedImgList.get(i).setY(y);
+				_animatedImgList.get(i).setDirX(dirX);
+				_animatedImgList.get(i).setDirY(dirY);
+				_animatedImgList.get(i).setScale(scale);
+
+				//TODO:描画順を変えて画像の重なり順が変えれたら。。。
+				// 画像を描画
+				image(pimg, x, y);
+
 			}
-
-			if ((y < 0) || (y > height - pimg.height)) {
-				dirY = -dirY;
-			}
-
-			// TODO:画像リサイズ
-			//img.resize(0, img.height + (dirY * ANIMATION_SPEED));
-
-			//TODO:描画順を変えて画像の重なり順が変えれたら。。。
-			// 画像を描画
-			image(pimg, x, y);
-
-			// 変更情報を保持
-			_animatedImgList.get(i).setImg(pimg);
-			_animatedImgList.get(i).setX(x);
-			_animatedImgList.get(i).setY(y);
-			_animatedImgList.get(i).setDirX(dirX);
-			_animatedImgList.get(i).setDirY(dirY);
-
+		} catch (Exception e) {
+			exit();
+			e.printStackTrace();
 		}
-
 	}
 
 
@@ -266,8 +298,8 @@ public class MainSketch extends PApplet {
 					anmImg.setDirY(-1);
 				}
 
-				// アニメーション画像設定（※基本画像は右向き）
-				if (anmImg.getDirX() < 0) {
+				// アニメーション画像設定（※基本画像は左向き）
+				if (anmImg.getDirX() > 0) {
 					// 左右反転
 					bimg = ImageUtil.FlipHorizontal(bimg);
 				}
@@ -301,7 +333,6 @@ public class MainSketch extends PApplet {
 		monitor.addObserver(observer);
 		// Monitorの起動
 		monitor.start();
-
 	}
 
 }
