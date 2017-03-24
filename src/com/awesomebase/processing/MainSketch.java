@@ -148,13 +148,23 @@ public class MainSketch extends PApplet {
 			WritableRaster wr;
 			int x, y, dirX, dirY;
 			double scale;
+
+			// 画像数のインデックスリスト作成
+			ArrayList<Integer> idxList = new ArrayList<Integer>();
 			for (int i = 0; i < _animatedImgList.size(); i++) {
-				pimg = _animatedImgList.get(i).getImg();
-				x = _animatedImgList.get(i).getX();
-				y = _animatedImgList.get(i).getY();
-				dirX = _animatedImgList.get(i).getDirX();
-				dirY = _animatedImgList.get(i).getDirY();
-				scale = _animatedImgList.get(i).getScale();
+				idxList.add(i);
+			}
+			// 画像の重なりをランダムにするためインデックスをシャッフル
+			// ※常にシャッフルされるため重なってる間ずっと前後してしまう...
+			//Collections.shuffle(idxList);
+
+		    for (int i = 0; i < idxList.size(); i++) {
+				pimg = _animatedImgList.get(idxList.get(i)).getImg();
+				x = _animatedImgList.get(idxList.get(i)).getX();
+				y = _animatedImgList.get(idxList.get(i)).getY();
+				dirX = _animatedImgList.get(idxList.get(i)).getDirX();
+				dirY = _animatedImgList.get(idxList.get(i)).getDirY();
+				scale = _animatedImgList.get(idxList.get(i)).getScale();
 
 				x += dirX * Constants.ANIMATION_SPEED;
 				y += dirY * Constants.ANIMATION_SPEED;
@@ -196,7 +206,7 @@ public class MainSketch extends PApplet {
 				}
 
 				// リサイズ前の画像を保持
-				_animatedImgList.get(i).setImg(pimg.copy());
+				_animatedImgList.get(idxList.get(i)).setImg(pimg.copy());
 
 				// 画像リサイズ
 				if (random(1000) < 15) {
@@ -214,17 +224,16 @@ public class MainSketch extends PApplet {
 
 
 				// 画像の情報を保持
-				_animatedImgList.get(i).setX(x);
-				_animatedImgList.get(i).setY(y);
-				_animatedImgList.get(i).setDirX(dirX);
-				_animatedImgList.get(i).setDirY(dirY);
-				_animatedImgList.get(i).setScale(scale);
+				_animatedImgList.get(idxList.get(i)).setX(x);
+				_animatedImgList.get(idxList.get(i)).setY(y);
+				_animatedImgList.get(idxList.get(i)).setDirX(dirX);
+				_animatedImgList.get(idxList.get(i)).setDirY(dirY);
+				_animatedImgList.get(idxList.get(i)).setScale(scale);
 
-				//TODO:描画順を変えて画像の重なり順が変えれたら。。。
 				// 画像を描画
 				image(pimg, x, y);
-
 			}
+
 		} catch (Exception e) {
 			exit();
 			e.printStackTrace();

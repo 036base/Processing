@@ -16,7 +16,7 @@ public class Constants {
 	/**
 	 * 最大倍率
 	 */
-	public static final double MAX_SCALE = 1.5;
+	public static final double MAX_SCALE = 2.0;
 
 	/**
 	 * 最小倍率
