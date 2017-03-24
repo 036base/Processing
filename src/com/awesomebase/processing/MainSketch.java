@@ -159,25 +159,40 @@ public class MainSketch extends PApplet {
 				x += dirX * Constants.ANIMATION_SPEED;
 				y += dirY * Constants.ANIMATION_SPEED;
 
+
+				boolean turn = false;
+				// ランダムに方向転換
+				if (random(1000) < 5) {
+					// X軸進行方向を逆転
+					dirX = -dirX;
+					turn  = true;
+				} else if (random(1000) >= 995) {
+					// Y軸進行方向を逆転
+					dirY = -dirY;
+				}
+
 				if ((x < 0) || (x > width - pimg.width)) {
 					// X軸進行方向を逆転
 					dirX = -dirX;
+					turn = true;
+				}
 
+				if ((y < 0) || (y > height - pimg.height)) {
+					// Y軸進行方向を逆転
+					dirY = -dirY;
+				}
+
+				if (turn) {
 					// 画像を左右反転
 					BufferedImage bimgFH = ImageUtil.PImage2BImage(pimg);
 					bimgFH = ImageUtil.FlipHorizontal(bimgFH);
-//					pimg = new PImage(bimgFH);
+					//pimg = new PImage(bimgFH);
 					//TODO:Processingでメモリ消費を抑えてBufferedImageの内容をPImageにコピーする
 					// 参考：http://junkato.jp/ja/blog/2013/01/28/processing-efficient-copy-from-bufferedimage-to-pimage/
 					DataBufferInt dbi = new DataBufferInt(pimg.pixels, pimg.pixels.length);
 					wr = Raster.createWritableRaster(bimgFH.getSampleModel(), dbi, new Point(0, 0));
 					bimgFH.copyData(wr);
 					pimg.updatePixels();
-				}
-
-				if ((y < 0) || (y > height - pimg.height)) {
-					// Y軸進行方向を逆転
-					dirY = -dirY;
 				}
 
 				// リサイズ前の画像を保持
