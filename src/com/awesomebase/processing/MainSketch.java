@@ -174,13 +174,13 @@ public class MainSketch extends PApplet {
 				_animatedImgList.get(i).setImg(pimg.copy());
 
 				// 画像リサイズ
-				if (randomInt(1000) < 15) {
+				if (randomInt(1000) < 10) {
 					if (scale < Constants.MAX_SCALE) {
-						scale = scale + 0.02;
+						scale = scale + 0.01;
 					}
-				} else if (randomInt(1000) >= 995) {
+				} else if (randomInt(1000) >= 990) {
 					if (scale > Constants.MIN_SCALE) {
-						scale = scale - 0.02;
+						scale = scale - 0.01;
 					}
 				}
 				int reWidth = (int)(pimg.width * scale);
