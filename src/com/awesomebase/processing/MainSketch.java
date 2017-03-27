@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import java.util.Random;
@@ -93,41 +94,9 @@ public class MainSketch extends PApplet {
 			// アニメーション画像をリストに追加
 			_animatedImgList = new ArrayList<AnimatedImage>();
 			for (final File file : fileList) {
-
-				// 画像透過処理
-				BufferedImage bimg = ImageUtil.Transparency(file, Color.WHITE);
-				// 補正値により画像透過処理（★処理に時間がかかる...）
-				//String correction_value = _properties.getProperty("correction_value");
-				//bimg = ImageUtil.Transparency(file, Integer.parseInt(correction_value));
-
-
-				Random rand = new Random();
-				AnimatedImage anmImg = new AnimatedImage();
-
-				// 初期座標を設定
-				anmImg.setX((rand.nextInt(width - bimg.getWidth()) + 1));
-				anmImg.setY((rand.nextInt(height - bimg.getHeight()) + 1));
-
-				// 進行方向を設定
-				if (rand.nextBoolean()) {
-					anmImg.setDirX(1);
-				} else {
-					anmImg.setDirX(-1);
-				}
-				if (rand.nextBoolean()) {
-					anmImg.setDirY(1);
-				} else {
-					anmImg.setDirY(-1);
-				}
-
-				// アニメーション画像設定（※基本画像は左向き）
-				if (anmImg.getDirX() > 0) {
-					// 左右反転
-					bimg = ImageUtil.FlipHorizontal(bimg);
-				}
-				anmImg.setImg(new PImage(bimg));
-
-				_animatedImgList.add(anmImg);
+				// アニメーション画像クラス作成・初期化
+				AnimatedImage aimg = createAnimatedImage(file);
+				_animatedImgList.add(aimg);
 			}
 		} catch (Exception e) {
 			exit();
@@ -149,22 +118,18 @@ public class MainSketch extends PApplet {
 			int x, y, dirX, dirY;
 			double scale;
 
-			// 画像数のインデックスリスト作成
-			ArrayList<Integer> idxList = new ArrayList<Integer>();
-			for (int i = 0; i < _animatedImgList.size(); i++) {
-				idxList.add(i);
+			if (randomInt(1000) < 5) {
+				// リストの順序をシャッフルして画像の重なりを変更する
+				Collections.shuffle(_animatedImgList);
 			}
-			// 画像の重なりをランダムにするためインデックスをシャッフル
-			// ※常にシャッフルされるため重なってる間ずっと前後してしまう...
-			//Collections.shuffle(idxList);
 
-		    for (int i = 0; i < idxList.size(); i++) {
-				pimg = _animatedImgList.get(idxList.get(i)).getImg();
-				x = _animatedImgList.get(idxList.get(i)).getX();
-				y = _animatedImgList.get(idxList.get(i)).getY();
-				dirX = _animatedImgList.get(idxList.get(i)).getDirX();
-				dirY = _animatedImgList.get(idxList.get(i)).getDirY();
-				scale = _animatedImgList.get(idxList.get(i)).getScale();
+		    for (int i = 0; i < _animatedImgList.size(); i++) {
+				pimg = _animatedImgList.get(i).getImg();
+				x = _animatedImgList.get(i).getX();
+				y = _animatedImgList.get(i).getY();
+				dirX = _animatedImgList.get(i).getDirX();
+				dirY = _animatedImgList.get(i).getDirY();
+				scale = _animatedImgList.get(i).getScale();
 
 				x += dirX * Constants.ANIMATION_SPEED;
 				y += dirY * Constants.ANIMATION_SPEED;
@@ -172,11 +137,11 @@ public class MainSketch extends PApplet {
 
 				boolean turn = false;
 				// ランダムに方向転換
-				if (random(1000) < 5) {
+				if (randomInt(1000) < 5) {
 					// X軸進行方向を逆転
 					dirX = -dirX;
 					turn  = true;
-				} else if (random(1000) >= 995) {
+				} else if (randomInt(1000) >= 995) {
 					// Y軸進行方向を逆転
 					dirY = -dirY;
 				}
@@ -206,14 +171,14 @@ public class MainSketch extends PApplet {
 				}
 
 				// リサイズ前の画像を保持
-				_animatedImgList.get(idxList.get(i)).setImg(pimg.copy());
+				_animatedImgList.get(i).setImg(pimg.copy());
 
 				// 画像リサイズ
-				if (random(1000) < 15) {
+				if (randomInt(1000) < 15) {
 					if (scale < Constants.MAX_SCALE) {
 						scale = scale + 0.02;
 					}
-				} else if (random(1000) >= 995) {
+				} else if (randomInt(1000) >= 995) {
 					if (scale > Constants.MIN_SCALE) {
 						scale = scale - 0.02;
 					}
@@ -224,11 +189,11 @@ public class MainSketch extends PApplet {
 
 
 				// 画像の情報を保持
-				_animatedImgList.get(idxList.get(i)).setX(x);
-				_animatedImgList.get(idxList.get(i)).setY(y);
-				_animatedImgList.get(idxList.get(i)).setDirX(dirX);
-				_animatedImgList.get(idxList.get(i)).setDirY(dirY);
-				_animatedImgList.get(idxList.get(i)).setScale(scale);
+				_animatedImgList.get(i).setX(x);
+				_animatedImgList.get(i).setY(y);
+				_animatedImgList.get(i).setDirX(dirX);
+				_animatedImgList.get(i).setDirY(dirY);
+				_animatedImgList.get(i).setScale(scale);
 
 				// 画像を描画
 				image(pimg, x, y);
@@ -241,6 +206,61 @@ public class MainSketch extends PApplet {
 	}
 
 
+
+
+	/**
+	 * アニメーション画像クラス作成・初期化
+	 *
+	 * @param file
+	 * @return
+	 */
+	private static AnimatedImage createAnimatedImage(File file) {
+
+		// 画像透過処理
+		BufferedImage bimg = ImageUtil.Transparency(file, Color.WHITE);
+		// 補正値により画像透過処理（★処理に時間がかかる...）
+		//String correction_value = _properties.getProperty("correction_value");
+		//bimg = ImageUtil.Transparency(file, Integer.parseInt(correction_value));
+
+
+		AnimatedImage aimg = new AnimatedImage();
+
+		// 初期座標を設定
+		aimg.setX((randomInt(_width - bimg.getWidth()) + 1));
+		aimg.setY((randomInt(_height - bimg.getHeight()) + 1));
+
+		// 進行方向を設定
+		if (randomInt(2) == 1) {
+			aimg.setDirX(1);
+		} else {
+			aimg.setDirX(-1);
+		}
+		if (randomInt(2) == 0) {
+			aimg.setDirY(1);
+		} else {
+			aimg.setDirY(-1);
+		}
+
+		// アニメーション画像設定（※基本画像は左向き）
+		if (aimg.getDirX() > 0) {
+			// 左右反転
+			bimg = ImageUtil.FlipHorizontal(bimg);
+		}
+		aimg.setImg(new PImage(bimg));
+
+		return aimg;
+	}
+
+
+	/**
+	 * ランダム値取得
+	 */
+	private static int randomInt(int max) {
+
+		Random rand = new Random();
+		return rand.nextInt(max);
+
+	}
 
 	/**
 	 * 設定ファイル読み込み
@@ -300,37 +320,9 @@ public class MainSketch extends PApplet {
 //				System.out.println("onFileCreate:" + file.getName());
 //				super.onFileCreate(file);
 
-				// 画像透過処理
-				BufferedImage bimg = ImageUtil.Transparency(file, Color.WHITE);
-
-				Random rand = new Random();
-				AnimatedImage anmImg = new AnimatedImage();
-
-				// 初期座標を設定
-				anmImg.setX((rand.nextInt(_width - bimg.getWidth()) + 1));
-				anmImg.setY((rand.nextInt(_height - bimg.getHeight()) + 1));
-
-				// 進行方向を設定
-				if (rand.nextBoolean()) {
-					anmImg.setDirX(1);
-				} else {
-					anmImg.setDirX(-1);
-				}
-				if (rand.nextBoolean()) {
-					anmImg.setDirY(1);
-				} else {
-					anmImg.setDirY(-1);
-				}
-
-				// アニメーション画像設定（※基本画像は左向き）
-				if (anmImg.getDirX() > 0) {
-					// 左右反転
-					bimg = ImageUtil.FlipHorizontal(bimg);
-				}
-				anmImg.setImg(new PImage(bimg));
-
-				_animatedImgList.add(anmImg);
-
+				// アニメーション画像クラス作成・初期化
+				AnimatedImage aimg = createAnimatedImage(file);
+				_animatedImgList.add(aimg);
 			}
 
 			@Override
