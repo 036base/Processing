@@ -36,10 +36,7 @@ public class MainSketch extends PApplet {
 	private static Properties _properties;
 	private static PImage _backgroundImg;
 	private static List<AnimatedImage> _animatedImgList;
-
 	private static int _width, _height;
-
-
 
 	public static void main(String[] args) {
 		try {
@@ -64,13 +61,27 @@ public class MainSketch extends PApplet {
 	@Override
 	public void settings() {
 		try {
-			// TODO:可能であれば背景画像のサイズにする、もしくは設定ファイルに定義する
-			size(1600, 900);
-			//size(displayWidth, displayHeight);
-			//fullScreen();
+			if ("1".equals(_properties.getProperty("full_screen"))) {
+				//----------------------------
+				// フルスクリーンモードで表示
+				//----------------------------
+				int display = Integer.parseInt(_properties.getProperty("display"));
+				fullScreen(display);
+			} else {
+				//----------------------------
+				// デフォルト画面サイズで表示
+				//----------------------------
+				String[] scrennSize = _properties.getProperty("screen_size").split(",");
+				size(Integer.parseInt(scrennSize[0]), Integer.parseInt(scrennSize[1]));
+			}
+
+			// Processingメソッド以外で変数が読み取れないため保持
+			_width = width;
+			_height = height;
+
 		} catch (Exception e) {
-			exit();
 			e.printStackTrace();
+			exit();
 		}
 	}
 
@@ -80,13 +91,17 @@ public class MainSketch extends PApplet {
 	@Override
 	public void setup() {
 		try {
+			// 画面のタイトル、リサイズ許可設定
+			surface.setTitle("");
+			surface.setResizable(true);
+
 			// Processingメソッド以外で変数が読み取れないため保持
 			_width = width;
 			_height = height;
 
-			// 背景画像の読み込み、描画
+			// 背景画像の読み込み、リサイズ
 			_backgroundImg = loadImage(_properties.getProperty("file_background_image"));
-			background(_backgroundImg);
+			_backgroundImg.resize(width, height);
 
 			// アニメーション画像フォルダから拡張子が「.png」のファイルを取得
 			final List<File> fileList = (List<File>) FileUtils.listFiles(new File(_properties.getProperty("dir_animated_image")), FileFilterUtils.suffixFileFilter(".png"), FileFilterUtils.trueFileFilter());
@@ -99,8 +114,8 @@ public class MainSketch extends PApplet {
 				_animatedImgList.add(aimg);
 			}
 		} catch (Exception e) {
-			exit();
 			e.printStackTrace();
+			exit();
 		}
 	}
 
@@ -110,8 +125,13 @@ public class MainSketch extends PApplet {
 	@Override
 	public void draw() {
 		try {
-			// 背景画像を描画
-			background(_backgroundImg);
+			// Processingメソッド以外で変数が読み取れないため保持
+			_width = width;
+			_height = height;
+
+			// 背景画像をリサイズ、描画
+			_backgroundImg.resize(width, height);
+			image(_backgroundImg, 0, 0);
 
 			PImage pimg;
 			WritableRaster wr;
@@ -200,11 +220,36 @@ public class MainSketch extends PApplet {
 			}
 
 		} catch (Exception e) {
-			exit();
 			e.printStackTrace();
+			exit();
 		}
 	}
 
+	/**
+	 * Processing KeyPressed
+	 */
+	@Override
+	public void keyPressed() {
+		switch (key) {
+		case ENTER:
+		case RETURN:
+			break;
+		case BACKSPACE:
+			break;
+		case TAB:
+			break;
+		case DELETE:
+			break;
+		case ESC:
+			// ESCキーで終了
+			exit();
+			break;
+		case ' ':
+			break;
+		default:
+			break;
+		}
+	}
 
 
 
