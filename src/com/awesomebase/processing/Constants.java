@@ -8,8 +8,19 @@ package com.awesomebase.processing;
  */
 public class Constants {
 
+
 	/**
-	 * アニメーション速度
+	 * 背景設定：イメージ
+	 */
+	public static final int BACKGROUND_IMAGE = 0;
+
+	/**
+	 * 背景設定：ムービー
+	 */
+	public static final int BACKGROUND_MOVIE = 1;
+
+	/**
+	 * デフォルトアニメーション速度
 	 */
 	public static final int ANIMATION_SPEED = 1;
 

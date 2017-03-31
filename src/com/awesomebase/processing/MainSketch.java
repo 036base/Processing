@@ -24,6 +24,7 @@ import org.apache.commons.io.monitor.FileAlterationObserver;
 
 import processing.core.PApplet;
 import processing.core.PImage;
+import processing.video.Movie;
 
 /**
  * Processingメインクラス
@@ -33,10 +34,15 @@ import processing.core.PImage;
  */
 public class MainSketch extends PApplet {
 
-	private static Properties _properties;
-	private static PImage _backgroundImg;
+	private static Properties _properties;	// 設定ファイル
+	private static int _width, _height;		// 画面の幅、高さ
+
+	private static int _backgroundMode;	// 背景設定
+	private static PImage _backgroundImg;	// 背景イメージ
+	private static Movie  _backgroundMov;	// 背景ムービー
+
 	private static List<AnimatedImage> _animatedImgList;
-	private static int _width, _height;
+
 
 	public static void main(String[] args) {
 		try {
@@ -75,6 +81,9 @@ public class MainSketch extends PApplet {
 				size(Integer.parseInt(scrennSize[0]), Integer.parseInt(scrennSize[1]));
 			}
 
+			// 背景モード
+			_backgroundMode = Integer.parseInt(_properties.getProperty("background_mode"));
+
 			// Processingメソッド以外で変数が読み取れないため保持
 			_width = width;
 			_height = height;
@@ -99,9 +108,18 @@ public class MainSketch extends PApplet {
 			_width = width;
 			_height = height;
 
-			// 背景画像の読み込み、リサイズ
-			_backgroundImg = loadImage(_properties.getProperty("file_background_image"));
-			_backgroundImg.resize(width, height);
+			if (_backgroundMode == Constants.BACKGROUND_IMAGE) {
+				// 背景画像の読み込み、リサイズ
+				_backgroundImg = loadImage(_properties.getProperty("file_background_image"));
+				_backgroundImg.resize(width, height);
+			} else if (_backgroundMode == Constants.BACKGROUND_MOVIE) {
+				// 背景画像の読み込み、リサイズ
+				_backgroundMov = new Movie(this, _properties.getProperty("file_background_movie"));
+				_backgroundMov.loop();	// ループ再生
+				_backgroundMov.play();	// 再生
+			} else {
+				// 背景なし
+			}
 
 			// アニメーション画像フォルダから拡張子が「.png」のファイルを取得
 			final List<File> fileList = (List<File>) FileUtils.listFiles(new File(_properties.getProperty("dir_animated_image")), FileFilterUtils.suffixFileFilter(".png"), FileFilterUtils.trueFileFilter());
@@ -129,13 +147,21 @@ public class MainSketch extends PApplet {
 			_width = width;
 			_height = height;
 
-			// 背景画像をリサイズ、描画
-			_backgroundImg.resize(width, height);
-			image(_backgroundImg, 0, 0);
+			if (_backgroundMode == Constants.BACKGROUND_IMAGE) {
+				// 背景画像をリサイズ、描画
+				_backgroundImg.resize(width, height);
+				image(_backgroundImg, 0, 0);
+			} else if (_backgroundMode == Constants.BACKGROUND_MOVIE) {
+				 // 背景動画を表示
+				 image(_backgroundMov, 0, 0, _width, _height);
+			} else {
+				// 背景なし
+				background(0);
+			}
 
 			PImage pimg;
 			WritableRaster wr;
-			int x, y, dirX, dirY;
+			int x, y, dirX, dirY, speed;
 			double scale;
 
 			if (randomInt(1000) < 5) {
@@ -150,18 +176,29 @@ public class MainSketch extends PApplet {
 				dirX = _animatedImgList.get(i).getDirX();
 				dirY = _animatedImgList.get(i).getDirY();
 				scale = _animatedImgList.get(i).getScale();
+				speed = _animatedImgList.get(i).getSpeed();
 
-				x += dirX * Constants.ANIMATION_SPEED;
-				y += dirY * Constants.ANIMATION_SPEED;
+				int randomSpeed = randomInt(100);
+				if (randomSpeed > 0 && randomSpeed < 4) {
+					// 速度をアップ
+					speed = randomSpeed;
+				} else if (randomSpeed >= 90) {
+					// 速度を戻す
+					speed = Constants.ANIMATION_SPEED;
+				}
+
+				x += dirX * speed;
+				y += dirY * speed;
 
 
 				boolean turn = false;
+				int randomDir = randomInt(1000);
 				// ランダムに方向転換
-				if (randomInt(1000) < 5) {
+				if (randomDir < 5) {
 					// X軸進行方向を逆転
 					dirX = -dirX;
 					turn  = true;
-				} else if (randomInt(1000) >= 995) {
+				} else if (randomDir >= 995) {
 					// Y軸進行方向を逆転
 					dirY = -dirY;
 				}
@@ -194,11 +231,12 @@ public class MainSketch extends PApplet {
 				_animatedImgList.get(i).setImg(pimg.copy());
 
 				// 画像リサイズ
-				if (randomInt(1000) < 10) {
+				int randomSize = randomInt(1000);
+				if (randomSize < 10) {
 					if (scale < Constants.MAX_SCALE) {
 						scale = scale + 0.01;
 					}
-				} else if (randomInt(1000) >= 990) {
+				} else if (randomSize >= 990) {
 					if (scale > Constants.MIN_SCALE) {
 						scale = scale - 0.01;
 					}
@@ -214,6 +252,7 @@ public class MainSketch extends PApplet {
 				_animatedImgList.get(i).setDirX(dirX);
 				_animatedImgList.get(i).setDirY(dirY);
 				_animatedImgList.get(i).setScale(scale);
+				_animatedImgList.get(i).setSpeed(speed);
 
 				// 画像を描画
 				image(pimg, x, y);
@@ -249,6 +288,15 @@ public class MainSketch extends PApplet {
 		default:
 			break;
 		}
+	}
+
+	/**
+	 * movieEvent
+	 *
+	 * @param m
+	 */
+	public void movieEvent(Movie m) {
+		m.read();
 	}
 
 
