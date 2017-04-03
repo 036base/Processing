@@ -178,8 +178,8 @@ public class MainSketch extends PApplet {
 				scale = _animatedImgList.get(i).getScale();
 				speed = _animatedImgList.get(i).getSpeed();
 
-				int randomSpeed = randomInt(100);
-				if (randomSpeed > 0 && randomSpeed < 4) {
+				int randomSpeed = randomInt(100) + 1;
+				if (randomSpeed <= 3) {
 					// 速度をアップ
 					speed = randomSpeed;
 				} else if (randomSpeed >= 90) {
@@ -241,9 +241,8 @@ public class MainSketch extends PApplet {
 						scale = scale - 0.01;
 					}
 				}
-				int reWidth = (int)(pimg.width * scale);
-				int reHeight = (int)(pimg.height * scale);
-				pimg.resize(reWidth , reHeight);
+				int resize = (int)(pimg.width * scale);
+				pimg.resize(resize , 0); // 0を指定すると自動で比率を計算してくれる
 
 
 				// 画像の情報を保持
@@ -339,7 +338,15 @@ public class MainSketch extends PApplet {
 			// 左右反転
 			bimg = ImageUtil.FlipHorizontal(bimg);
 		}
-		aimg.setImg(new PImage(bimg));
+
+		PImage pimg = new PImage(bimg);
+
+		// デフォルトサイズに調整
+		int defaultImageWidth = Integer.parseInt(_properties.getProperty("default_image_width"));
+		pimg.resize(defaultImageWidth, 0);
+
+
+		aimg.setImg(pimg);
 
 		return aimg;
 	}
