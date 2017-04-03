@@ -75,9 +75,17 @@ public class ImageUtil {
 
 			bimg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
+			// 透過対象RGB
+			int[] tRGB = {color.getRGB(), color.getRGB(), color.getRGB(), color.getRGB(), color.getRGB()};
+			// 画像の左上４ピクセルも透過対象にする
+			tRGB[1] = readImg.getRGB(0, 0);
+			tRGB[2] = readImg.getRGB(1, 0);
+			tRGB[3] = readImg.getRGB(0, 1);
+			tRGB[4] = readImg.getRGB(1, 1);
+
 			for (int y = 0; y < height; ++y) {
 				for (int x = 0; x < width; ++x) {
-					if (readImg.getRGB(x, y) == color.getRGB()) {
+					if (readImg.getRGB(x, y) == tRGB[0] || readImg.getRGB(x, y) == tRGB[1] || readImg.getRGB(x, y) == tRGB[2] || readImg.getRGB(x, y) == tRGB[3] || readImg.getRGB(x, y) == tRGB[4]) {
 						// 白を透過
 						bimg.setRGB(x, y, 0);
 					} else {
