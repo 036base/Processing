@@ -163,6 +163,7 @@ public class MainSketch extends PApplet {
 			WritableRaster wr;
 			int x, y, dirX, dirY, speed;
 			double scale;
+			boolean turn;
 
 			if (randomInt(1000) < 5) {
 				// リストの順序をシャッフルして画像の重なりを変更する
@@ -170,6 +171,7 @@ public class MainSketch extends PApplet {
 			}
 
 		    for (int i = 0; i < _animatedImgList.size(); i++) {
+		    	// 画像情報を取得
 				pimg = _animatedImgList.get(i).getImg();
 				x = _animatedImgList.get(i).getX();
 				y = _animatedImgList.get(i).getY();
@@ -190,29 +192,32 @@ public class MainSketch extends PApplet {
 				x += dirX * speed;
 				y += dirY * speed;
 
-
-				boolean turn = false;
+				turn = false;
 				int randomDir = randomInt(1000);
-				// ランダムに方向転換
-				if (randomDir < 5) {
-					// X軸進行方向を逆転
-					dirX = -dirX;
-					turn  = true;
-				} else if (randomDir >= 995) {
-					// Y軸進行方向を逆転
-					dirY = -dirY;
-				}
-
 				if ((x < 0) || (x > width - pimg.width)) {
 					// X軸進行方向を逆転
 					dirX = -dirX;
 					turn = true;
+				} else {
+					// ランダムに方向転換
+					if (randomDir >= 1 && randomDir <= 5) {
+						// X軸進行方向を逆転
+						dirX = -dirX;
+						turn = true;
+					}
 				}
 
 				if ((y < 0) || (y > height - pimg.height)) {
 					// Y軸進行方向を逆転
 					dirY = -dirY;
+				} else {
+					// ランダムに方向転換
+					if (randomDir >= 11 && randomDir <= 15) {
+						// Y軸進行方向を逆転
+						dirY = -dirY;
+					}
 				}
+
 
 				if (turn) {
 					// 画像を左右反転
@@ -245,7 +250,28 @@ public class MainSketch extends PApplet {
 				pimg.resize(resize , 0); // 0を指定すると自動で比率を計算してくれる
 
 
-				// 画像の情報を保持
+				// 進行方向に画像が向くように回転する
+				pushMatrix();
+				// 画像中央を回転の中心にする
+				translate(x + pimg.width / 2, y + pimg.height / 2);
+				// 回転する
+				float deg = 45 * dirX * dirY;
+				rotate(radians(deg));
+				// 回転の中心が画像中央なので、画像描画原点も画像中央にする
+				// こうすると、(0,0)に配置すれば期待した位置に画像が置ける
+				// これをしないと、image()命令で配置する座標計算が面倒になる
+				imageMode(CENTER);
+				// 画像を描画
+				image(pimg, 0, 0);
+				// 画像描画原点を元（画像の左上隅）に戻す
+				imageMode(CORNER);
+				popMatrix();
+
+				// 画像を描画
+//				image(pimg, x, y);
+
+
+				// 画像情報を保持
 				_animatedImgList.get(i).setX(x);
 				_animatedImgList.get(i).setY(y);
 				_animatedImgList.get(i).setDirX(dirX);
@@ -253,9 +279,7 @@ public class MainSketch extends PApplet {
 				_animatedImgList.get(i).setScale(scale);
 				_animatedImgList.get(i).setSpeed(speed);
 
-				// 画像を描画
-				image(pimg, x, y);
-			}
+		    }
 
 		} catch (Exception e) {
 			e.printStackTrace();
