@@ -191,12 +191,9 @@ public class MainSketch extends PApplet {
 					speed = Constants.ANIMATION_SPEED;
 				}
 
-				x += dirX * speed;
-				y += dirY * speed;
-
 				turn = false;
 				int randomDir = randomInt(1000);
-				if ((x < 0) || (x > width - pimg.width)) {
+				if (((x + dirX * speed) < 0) || ((x + dirX * speed) > width - pimg.width)) {
 					// X軸進行方向を逆転
 					dirX = -dirX;
 					turn = true;
@@ -209,7 +206,7 @@ public class MainSketch extends PApplet {
 					}
 				}
 
-				if ((y < 0) || (y > height - pimg.height)) {
+				if (((y + dirY * speed) < 0) || ((y + dirY * speed) > height - pimg.height)) {
 					// Y軸進行方向を逆転
 					dirY = -dirY;
 				} else {
@@ -219,6 +216,9 @@ public class MainSketch extends PApplet {
 						dirY = -dirY;
 					}
 				}
+
+				x += dirX * speed;
+				y += dirY * speed;
 
 
 				if (turn) {
