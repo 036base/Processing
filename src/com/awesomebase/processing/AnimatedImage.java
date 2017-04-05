@@ -14,7 +14,7 @@ public class AnimatedImage {
 	private int _y = 0;			// Y座標
 	private int _dirX = 1;			// X軸進行方向
 	private int _dirY = 1;			// Y軸進行方向
-	private double _scale = 1.0;	// 倍率
+	private float _scale = 1.0f;	// 倍率
 	private int _speed = Constants.ANIMATION_SPEED;	// 速度
 
 	public PImage getImg() {
@@ -57,11 +57,11 @@ public class AnimatedImage {
 		_dirY = dirY;
 	}
 
-	public double getScale() {
+	public float getScale() {
 		return _scale;
 	}
 
-	public void setScale(double scale) {
+	public void setScale(float scale) {
 		_scale = scale;
 	}
 

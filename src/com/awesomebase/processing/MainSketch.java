@@ -11,6 +11,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Properties;
 import java.util.Random;
@@ -162,13 +163,14 @@ public class MainSketch extends PApplet {
 			PImage pimg;
 			WritableRaster wr;
 			int x, y, dirX, dirY, speed;
-			double scale;
+			float scale;
 			boolean turn;
 
-			if (randomInt(1000) < 5) {
-				// リストの順序をシャッフルして画像の重なりを変更する
-				Collections.shuffle(_animatedImgList);
-			}
+//			if (randomInt(1000) < 5) {
+//				// リストの順序をシャッフルして画像の重なりを変更する
+//				Collections.shuffle(_animatedImgList);
+//			}
+			Collections.sort(_animatedImgList, new ScaleComparator());	// 倍率の昇順（大きいものが手前にくる）
 
 		    for (int i = 0; i < _animatedImgList.size(); i++) {
 		    	// 画像情報を取得
@@ -235,19 +237,20 @@ public class MainSketch extends PApplet {
 				// リサイズ前の画像を保持
 				_animatedImgList.get(i).setImg(pimg.copy());
 
+				//TODO:scale()によって拡大縮小するため不要になる
 				// 画像リサイズ
-				int randomSize = randomInt(1000);
-				if (randomSize < 10) {
-					if (scale < Constants.MAX_SCALE) {
-						scale = scale + 0.01;
-					}
-				} else if (randomSize >= 990) {
-					if (scale > Constants.MIN_SCALE) {
-						scale = scale - 0.01;
-					}
-				}
-				int resize = (int)(pimg.width * scale);
-				pimg.resize(resize , 0); // 0を指定すると自動で比率を計算してくれる
+//				int randomSize = randomInt(1000);
+//				if (randomSize < 10) {
+//					if (scale < Constants.MAX_SCALE) {
+//						scale = scale + 0.01f;
+//					}
+//				} else if (randomSize >= 990) {
+//					if (scale > Constants.MIN_SCALE) {
+//						scale = scale - 0.01f;
+//					}
+//				}
+//				int resize = (int)(pimg.width * scale);
+//				pimg.resize(resize , 0); // 0を指定すると自動で比率を計算してくれる
 
 
 				// 進行方向に画像が向くように回転する
@@ -257,14 +260,28 @@ public class MainSketch extends PApplet {
 				// 回転する
 				float deg = 45 * dirX * dirY;
 				rotate(radians(deg));
+
 				// 回転の中心が画像中央なので、画像描画原点も画像中央にする
 				// こうすると、(0,0)に配置すれば期待した位置に画像が置ける
 				// これをしないと、image()命令で配置する座標計算が面倒になる
 				imageMode(CENTER);
+
+				// 拡大縮小
+				scale += (0.01f * dirX * dirY);
+				if (scale > Constants.MAX_SCALE) {
+					scale = Constants.MAX_SCALE;
+				}
+				if (scale < Constants.MIN_SCALE) {
+					scale = Constants.MIN_SCALE;
+				}
+				scale(scale);
+
 				// 画像を描画
 				image(pimg, 0, 0);
+
 				// 画像描画原点を元（画像の左上隅）に戻す
 				imageMode(CORNER);
+
 				popMatrix();
 
 				// 画像を描画
@@ -473,6 +490,17 @@ public class MainSketch extends PApplet {
 		monitor.addObserver(observer);
 		// Monitorの起動
 		monitor.start();
+	}
+
+	/**
+	 * 倍率によるソート用比較クラス
+	 */
+	class ScaleComparator implements Comparator<AnimatedImage> {
+		@Override
+		public int compare(AnimatedImage p1, AnimatedImage p2) {
+			return Float.compare(p1.getScale(), p2.getScale());
+
+		}
 	}
 
 }
