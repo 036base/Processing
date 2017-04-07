@@ -27,7 +27,7 @@ public class Constants {
 	/**
 	 * 最大倍率
 	 */
-	public static final float MAX_SCALE = 1.5f;
+	public static final float MAX_SCALE = 2.0f;
 
 	/**
 	 * 最小倍率

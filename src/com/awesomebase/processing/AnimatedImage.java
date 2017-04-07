@@ -9,6 +9,7 @@ import processing.core.PImage;
  *
  */
 public class AnimatedImage {
+	private long _uid;				// ユニークID
 	private PImage _img;			// アニメーションイメージ
 	private int _x = 0;			// X座標
 	private int _y = 0;			// Y座標
@@ -16,6 +17,14 @@ public class AnimatedImage {
 	private int _dirY = 1;			// Y軸進行方向
 	private float _scale = 1.0f;	// 倍率
 	private int _speed = Constants.ANIMATION_SPEED;	// 速度
+
+	public long getUid() {
+		return _uid;
+	}
+
+	public void setUid(long uid) {
+		_uid = uid;
+	}
 
 	public PImage getImg() {
 		return _img;

@@ -9,9 +9,10 @@ import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Properties;
 import java.util.Random;
@@ -41,15 +42,20 @@ public class MainSketch extends PApplet {
 	private static int _backgroundMode;	// 背景設定
 	private static PImage _backgroundImg;	// 背景イメージ
 	private static Movie  _backgroundMov;	// 背景ムービー
+	private static int _maxImageCount;		// 最大表示数
 
 	private static List<AnimatedImage> _animatedImgList;
+	private static CollectionsComparator _comparator = new CollectionsComparator();
 
 
 	public static void main(String[] args) {
 		try {
 
 			// 設定ファイル読み込み
-			loadProperties();
+			_properties = new Properties();
+			InputStream inputStream = new FileInputStream("processing.properties");
+			_properties.load(inputStream);
+			inputStream.close();
 
 			// ファイル監視
 			fileMonitor();
@@ -84,6 +90,8 @@ public class MainSketch extends PApplet {
 
 			// 背景モード
 			_backgroundMode = Integer.parseInt(_properties.getProperty("background_mode"));
+			// 最大表示数
+			_maxImageCount = Integer.parseInt(_properties.getProperty("max_image_count"));
 
 			// Processingメソッド以外で変数が読み取れないため保持
 			_width = width;
@@ -124,12 +132,11 @@ public class MainSketch extends PApplet {
 
 			// アニメーション画像フォルダから拡張子が「.png」のファイルを取得
 			final List<File> fileList = (List<File>) FileUtils.listFiles(new File(_properties.getProperty("dir_animated_image")), FileFilterUtils.suffixFileFilter(".png"), FileFilterUtils.trueFileFilter());
-
-			// アニメーション画像をリストに追加
-			_animatedImgList = new ArrayList<AnimatedImage>();
+			_animatedImgList = Collections.synchronizedList(new ArrayList<AnimatedImage>());
 			for (final File file : fileList) {
 				// アニメーション画像クラス作成・初期化
 				AnimatedImage aimg = createAnimatedImage(file);
+				// リストに追加
 				_animatedImgList.add(aimg);
 			}
 		} catch (Exception e) {
@@ -166,11 +173,15 @@ public class MainSketch extends PApplet {
 			float scale;
 			boolean turn;
 
-//			if (randomInt(1000) < 5) {
-//				// リストの順序をシャッフルして画像の重なりを変更する
-//				Collections.shuffle(_animatedImgList);
-//			}
-			Collections.sort(_animatedImgList, new ScaleComparator());	// 倍率の昇順（大きいものが手前にくる）
+			// 古い順に削除
+			if (_animatedImgList.size() > _maxImageCount) {
+				// UIDの昇順でソート
+				Collections.sort(_animatedImgList, _comparator.new UidComparator());
+				_animatedImgList.subList(0, _animatedImgList.size() -_maxImageCount).clear();
+			}
+
+			// 倍率の昇順でソート（大きいものが手前にくる）
+			Collections.sort(_animatedImgList, _comparator.new ScaleComparator());
 
 		    for (int i = 0; i < _animatedImgList.size(); i++) {
 		    	// 画像情報を取得
@@ -185,7 +196,7 @@ public class MainSketch extends PApplet {
 				int randomSpeed = randomInt(100) + 1;
 				if (randomSpeed <= 3) {
 					// 速度をアップ
-					speed = randomSpeed;
+					speed = Constants.ANIMATION_SPEED + randomSpeed;
 				} else if (randomSpeed >= 90) {
 					// 速度を戻す
 					speed = Constants.ANIMATION_SPEED;
@@ -225,9 +236,6 @@ public class MainSketch extends PApplet {
 					// 画像を左右反転
 					BufferedImage bimgFH = ImageUtil.PImage2BImage(pimg);
 					bimgFH = ImageUtil.FlipHorizontal(bimgFH);
-					//pimg = new PImage(bimgFH);
-					//TODO:Processingでメモリ消費を抑えてBufferedImageの内容をPImageにコピーする
-					// 参考：http://junkato.jp/ja/blog/2013/01/28/processing-efficient-copy-from-bufferedimage-to-pimage/
 					DataBufferInt dbi = new DataBufferInt(pimg.pixels, pimg.pixels.length);
 					wr = Raster.createWritableRaster(bimgFH.getSampleModel(), dbi, new Point(0, 0));
 					bimgFH.copyData(wr);
@@ -236,21 +244,6 @@ public class MainSketch extends PApplet {
 
 				// リサイズ前の画像を保持
 				_animatedImgList.get(i).setImg(pimg.copy());
-
-				//TODO:scale()によって拡大縮小するため不要になる
-				// 画像リサイズ
-//				int randomSize = randomInt(1000);
-//				if (randomSize < 10) {
-//					if (scale < Constants.MAX_SCALE) {
-//						scale = scale + 0.01f;
-//					}
-//				} else if (randomSize >= 990) {
-//					if (scale > Constants.MIN_SCALE) {
-//						scale = scale - 0.01f;
-//					}
-//				}
-//				int resize = (int)(pimg.width * scale);
-//				pimg.resize(resize , 0); // 0を指定すると自動で比率を計算してくれる
 
 
 				// 進行方向に画像が向くように回転する
@@ -283,9 +276,6 @@ public class MainSketch extends PApplet {
 				imageMode(CORNER);
 
 				popMatrix();
-
-				// 画像を描画
-//				image(pimg, x, y);
 
 
 				// 画像情報を保持
@@ -358,6 +348,10 @@ public class MainSketch extends PApplet {
 
 		AnimatedImage aimg = new AnimatedImage();
 
+		// UID
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+		aimg.setUid(Long.parseLong(sdf.format( Calendar.getInstance().getTime())));
+
 		// 初期座標を設定
 		aimg.setX((randomInt(_width - bimg.getWidth()) + 1));
 		aimg.setY((randomInt(_height - bimg.getHeight()) + 1));
@@ -403,20 +397,6 @@ public class MainSketch extends PApplet {
 
 	}
 
-	/**
-	 * 設定ファイル読み込み
-	 */
-	private static void loadProperties() {
-		// 設定ファイル読み込み
-		_properties = new Properties();
-		try {
-			InputStream inputStream = new FileInputStream("processing.properties");
-			_properties.load(inputStream);
-			inputStream.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
 
 	/**
 	 * ファイル監視
@@ -424,8 +404,9 @@ public class MainSketch extends PApplet {
 	 * @throws Exception
 	 */
 	private static void fileMonitor() throws Exception {
+		long interval = Long.parseLong(_properties.getProperty("dir_monitoring_interval"));
 		// Monitorの生成。監視間隔はミリ秒。
-		FileAlterationMonitor monitor = new FileAlterationMonitor(5000);
+		FileAlterationMonitor monitor = new FileAlterationMonitor(interval);
 
 		// Observerの生成。監視するディレクトリを指定。
 		File dir = new File(_properties.getProperty("dir_animated_image"));
@@ -433,55 +414,16 @@ public class MainSketch extends PApplet {
 
 		// Listenerを生成して監視する内容を実装
 		FileAlterationListener listener = new FileAlterationListenerAdaptor() {
-			public void onDirectoryChange(File directory) {
-//				System.out.println("onDirectoryChange:" + directory.getName());
-//				super.onDirectoryChange(directory);
-			}
-
-			@Override
-			public void onDirectoryCreate(File directory) {
-//				System.out.println("onDirectoryCreate:" + directory.getName());
-//				super.onDirectoryCreate(directory);
-			}
-
-			@Override
-			public void onDirectoryDelete(File directory) {
-//				System.out.println("onDirectoryDelete:" + directory.getName());
-//				super.onDirectoryDelete(directory);
-			}
-
-			@Override
-			public void onFileChange(File file) {
-//				System.out.println("onFileChange:" + file.getName());
-//				super.onFileChange(file);
-			}
-
 			@Override
 			public void onFileCreate(File file) {
-//				System.out.println("onFileCreate:" + file.getName());
-//				super.onFileCreate(file);
-
-				// アニメーション画像クラス作成・初期化
-				AnimatedImage aimg = createAnimatedImage(file);
-				_animatedImgList.add(aimg);
-			}
-
-			@Override
-			public void onFileDelete(File file) {
-//				System.out.println("onFileDelete:" + file.getName());
-//				super.onFileDelete(file);
-			}
-
-			@Override
-			public void onStart(FileAlterationObserver observer) {
-//				System.out.println("onStart:" + observer.toString());
-//				super.onStart(observer);
-			}
-
-			@Override
-			public void onStop(FileAlterationObserver observer) {
-//				System.out.println("onStop:" + observer.toString());
-//				super.onStop(observer);
+				if (file.canRead() && file.getPath().endsWith(".png")) {
+					// アニメーション画像クラス作成・初期化
+					AnimatedImage aimg = createAnimatedImage(file);
+					// リストに追加
+					_animatedImgList.add(aimg);
+				} else {
+					System.out.println("Error!! File Can't Read or Not PNG file. " + file.getName());
+				}
 			}
 		};
 		// ObserverにListerを登録
@@ -490,17 +432,6 @@ public class MainSketch extends PApplet {
 		monitor.addObserver(observer);
 		// Monitorの起動
 		monitor.start();
-	}
-
-	/**
-	 * 倍率によるソート用比較クラス
-	 */
-	class ScaleComparator implements Comparator<AnimatedImage> {
-		@Override
-		public int compare(AnimatedImage p1, AnimatedImage p2) {
-			return Float.compare(p1.getScale(), p2.getScale());
-
-		}
 	}
 
 }
