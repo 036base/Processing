@@ -75,23 +75,68 @@ public class ImageUtil {
 
 			bimg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
-			// 透過対象RGB
-			int[] tRGB = {color.getRGB(), color.getRGB(), color.getRGB(), color.getRGB(), color.getRGB()};
-			// 画像の左上４ピクセルも透過対象にする
-			tRGB[1] = readImg.getRGB(0, 0);
-			tRGB[2] = readImg.getRGB(1, 0);
-			tRGB[3] = readImg.getRGB(0, 1);
-			tRGB[4] = readImg.getRGB(1, 1);
-
 			for (int y = 0; y < height; ++y) {
 				for (int x = 0; x < width; ++x) {
-					if (readImg.getRGB(x, y) == tRGB[0] || readImg.getRGB(x, y) == tRGB[1] || readImg.getRGB(x, y) == tRGB[2] || readImg.getRGB(x, y) == tRGB[3] || readImg.getRGB(x, y) == tRGB[4]) {
+					if (readImg.getRGB(x, y) == color.getRGB()) {
 						// 白を透過
 						bimg.setRGB(x, y, 0);
 					} else {
 						// 白以外はそのまま
 						bimg.setRGB(x, y, readImg.getRGB(x, y));
 					}
+				}
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			bimg = null;
+		}
+
+		return bimg;
+
+	}
+
+	/**
+	 * 透過処理 白、黒、画像四隅の色を透過
+	 *
+	 * @param file
+	 */
+	public static BufferedImage Transparency(File file) {
+
+		BufferedImage bimg = null;
+		try {
+			// 画像を取得
+			BufferedImage readImg = ImageIO.read(file);
+
+			int width = readImg.getWidth();	// 横の幅取得
+			int height = readImg.getHeight();	// 縦の高さ取得
+
+			bimg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+
+			// 透過対象RGB
+			int[] tRGB = {Color.WHITE.getRGB(), Color.WHITE.getRGB(), Color.WHITE.getRGB(), Color.WHITE.getRGB()};
+			// 画像の四隅1pxも透過対象にする
+			tRGB[0] = readImg.getRGB(0, 0);
+			tRGB[1] = readImg.getRGB(readImg.getWidth() - 1, 0);
+			tRGB[2] = readImg.getRGB(0, readImg.getHeight() - 1);
+			tRGB[3] = readImg.getRGB(readImg.getWidth() - 1, readImg.getHeight() - 1);
+
+			for (int y = 0; y < height; ++y) {
+				for (int x = 0; x < width; ++x) {
+					int rgb = readImg.getRGB(x, y);
+					if (readImg.getRGB(x, y) == Color.WHITE.getRGB() || readImg.getRGB(x, y) == Color.BLACK.getRGB()) {
+						// 白、黒は透過
+						rgb = 0;
+					} else {
+						for (int c = 0; c < tRGB.length; c++) {
+							if (readImg.getRGB(x, y) == tRGB[c]) {
+								// 透過対象のRGBの場合は透過
+								rgb = 0;
+								break;
+							}
+						}
+					}
+					bimg.setRGB(x, y, rgb);
 				}
 			}
 

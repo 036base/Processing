@@ -1,6 +1,5 @@
 package com.awesomebase.processing;
 
-import java.awt.Color;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
@@ -39,10 +38,13 @@ public class MainSketch extends PApplet {
 	private static Properties _properties;	// 設定ファイル
 	private static int _width, _height;		// 画面の幅、高さ
 
-	private static int _backgroundMode;	// 背景設定
+	private static String _backgroundMode;	// 背景設定
 	private static PImage _backgroundImg;	// 背景イメージ
 	private static Movie  _backgroundMov;	// 背景ムービー
 	private static int _maxImageCount;		// 最大表示数
+	private static float _maxImageScale;	// 最大倍率
+	private static float _minImageScale;	// 最小倍率
+	private static int _animationSpeed;	// デフォルトアニメーション速度
 
 	private static List<AnimatedImage> _animatedImgList;
 	private static CollectionsComparator _comparator = new CollectionsComparator();
@@ -56,6 +58,17 @@ public class MainSketch extends PApplet {
 			InputStream inputStream = new FileInputStream("processing.properties");
 			_properties.load(inputStream);
 			inputStream.close();
+
+			// 背景モード
+			_backgroundMode = _properties.getProperty("background_mode");
+			// 最大表示数
+			_maxImageCount = Integer.parseInt(_properties.getProperty("max_image_count"));
+			// 最大倍率
+			_maxImageScale = Float.parseFloat(_properties.getProperty("max_image_scale"));
+			// 最小倍率
+			_minImageScale = Float.parseFloat(_properties.getProperty("min_image_scale"));
+			// デフォルトアニメーション速度
+			_animationSpeed = Integer.parseInt(_properties.getProperty("default_animation_speed"));
 
 			// ファイル監視
 			fileMonitor();
@@ -74,24 +87,20 @@ public class MainSketch extends PApplet {
 	@Override
 	public void settings() {
 		try {
+
 			if ("1".equals(_properties.getProperty("full_screen"))) {
 				//----------------------------
 				// フルスクリーンモードで表示
 				//----------------------------
 				int display = Integer.parseInt(_properties.getProperty("display"));
-				fullScreen(display);
+				fullScreen(P2D, display);
 			} else {
 				//----------------------------
 				// デフォルト画面サイズで表示
 				//----------------------------
 				String[] scrennSize = _properties.getProperty("screen_size").split(",");
-				size(Integer.parseInt(scrennSize[0]), Integer.parseInt(scrennSize[1]));
+				size(Integer.parseInt(scrennSize[0]), Integer.parseInt(scrennSize[1]), P2D);
 			}
-
-			// 背景モード
-			_backgroundMode = Integer.parseInt(_properties.getProperty("background_mode"));
-			// 最大表示数
-			_maxImageCount = Integer.parseInt(_properties.getProperty("max_image_count"));
 
 			// Processingメソッド以外で変数が読み取れないため保持
 			_width = width;
@@ -113,15 +122,17 @@ public class MainSketch extends PApplet {
 			surface.setTitle("");
 			surface.setResizable(true);
 
+//			noSmooth();
+
 			// Processingメソッド以外で変数が読み取れないため保持
 			_width = width;
 			_height = height;
 
-			if (_backgroundMode == Constants.BACKGROUND_IMAGE) {
+			if ("0".equals(_backgroundMode)) {
 				// 背景画像の読み込み、リサイズ
 				_backgroundImg = loadImage(_properties.getProperty("file_background_image"));
 				_backgroundImg.resize(width, height);
-			} else if (_backgroundMode == Constants.BACKGROUND_MOVIE) {
+			} else if ("1".equals(_backgroundMode)) {
 				// 背景画像の読み込み、リサイズ
 				_backgroundMov = new Movie(this, _properties.getProperty("file_background_movie"));
 				_backgroundMov.loop();	// ループ再生
@@ -155,11 +166,11 @@ public class MainSketch extends PApplet {
 			_width = width;
 			_height = height;
 
-			if (_backgroundMode == Constants.BACKGROUND_IMAGE) {
+			if ("0".equals(_backgroundMode)) {
 				// 背景画像をリサイズ、描画
 				_backgroundImg.resize(width, height);
 				image(_backgroundImg, 0, 0);
-			} else if (_backgroundMode == Constants.BACKGROUND_MOVIE) {
+			} else if ("1".equals(_backgroundMode)) {
 				 // 背景動画を表示
 				 image(_backgroundMov, 0, 0, _width, _height);
 			} else {
@@ -196,10 +207,10 @@ public class MainSketch extends PApplet {
 				int randomSpeed = randomInt(100) + 1;
 				if (randomSpeed <= 3) {
 					// 速度をアップ
-					speed = Constants.ANIMATION_SPEED + randomSpeed;
+					speed = _animationSpeed + randomSpeed;
 				} else if (randomSpeed >= 90) {
 					// 速度を戻す
-					speed = Constants.ANIMATION_SPEED;
+					speed = _animationSpeed;
 				}
 
 				turn = false;
@@ -261,11 +272,11 @@ public class MainSketch extends PApplet {
 
 				// 拡大縮小
 				scale += (0.01f * dirX * dirY);
-				if (scale > Constants.MAX_SCALE) {
-					scale = Constants.MAX_SCALE;
+				if (scale > _maxImageScale) {
+					scale = _maxImageScale;
 				}
-				if (scale < Constants.MIN_SCALE) {
-					scale = Constants.MIN_SCALE;
+				if (scale < _minImageScale) {
+					scale = _minImageScale;
 				}
 				scale(scale);
 
@@ -340,7 +351,7 @@ public class MainSketch extends PApplet {
 	private static AnimatedImage createAnimatedImage(File file) {
 
 		// 画像透過処理
-		BufferedImage bimg = ImageUtil.Transparency(file, Color.WHITE);
+		BufferedImage bimg = ImageUtil.Transparency(file);
 		// 補正値により画像透過処理（★処理に時間がかかる...）
 		//String correction_value = _properties.getProperty("correction_value");
 		//bimg = ImageUtil.Transparency(file, Integer.parseInt(correction_value));
@@ -380,6 +391,8 @@ public class MainSketch extends PApplet {
 		int defaultImageWidth = Integer.parseInt(_properties.getProperty("default_image_width"));
 		pimg.resize(defaultImageWidth, 0);
 
+		// アニメーション速度
+		aimg.setSpeed(_animationSpeed);
 
 		aimg.setImg(pimg);
 

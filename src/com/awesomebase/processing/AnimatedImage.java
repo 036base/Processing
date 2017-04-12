@@ -16,7 +16,7 @@ public class AnimatedImage {
 	private int _dirX = 1;			// X軸進行方向
 	private int _dirY = 1;			// Y軸進行方向
 	private float _scale = 1.0f;	// 倍率
-	private int _speed = Constants.ANIMATION_SPEED;	// 速度
+	private int _speed = 1;		// 速度
 
 	public long getUid() {
 		return _uid;
