@@ -22,6 +22,8 @@ import org.apache.commons.io.monitor.FileAlterationListener;
 import org.apache.commons.io.monitor.FileAlterationListenerAdaptor;
 import org.apache.commons.io.monitor.FileAlterationMonitor;
 import org.apache.commons.io.monitor.FileAlterationObserver;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import processing.core.PApplet;
 import processing.core.PImage;
@@ -35,16 +37,19 @@ import processing.video.Movie;
  */
 public class MainSketch extends PApplet {
 
-	private static Properties _properties;	// 設定ファイル
+	private static Logger _logger = LogManager.getLogger();
+
+    private static Properties _properties;	// 設定ファイル
 	private static int _width, _height;		// 画面の幅、高さ
 
 	private static String _backgroundMode;	// 背景設定
 	private static PImage _backgroundImg;	// 背景イメージ
 	private static Movie  _backgroundMov;	// 背景ムービー
 	private static int _maxImageCount;		// 最大表示数
+	private static int _defaultImageWidth;	// アニメーション画像の初期幅
+	private static int _animationSpeed;	// デフォルトアニメーション速度
 	private static float _maxImageScale;	// 最大倍率
 	private static float _minImageScale;	// 最小倍率
-	private static int _animationSpeed;	// デフォルトアニメーション速度
 
 	private static List<AnimatedImage> _animatedImgList;
 	private static CollectionsComparator _comparator = new CollectionsComparator();
@@ -52,23 +57,14 @@ public class MainSketch extends PApplet {
 
 	public static void main(String[] args) {
 		try {
-
 			// 設定ファイル読み込み
 			_properties = new Properties();
 			InputStream inputStream = new FileInputStream("processing.properties");
 			_properties.load(inputStream);
 			inputStream.close();
 
-			// 背景モード
-			_backgroundMode = _properties.getProperty("background_mode");
-			// 最大表示数
-			_maxImageCount = Integer.parseInt(_properties.getProperty("max_image_count"));
-			// 最大倍率
-			_maxImageScale = Float.parseFloat(_properties.getProperty("max_image_scale"));
-			// 最小倍率
-			_minImageScale = Float.parseFloat(_properties.getProperty("min_image_scale"));
-			// デフォルトアニメーション速度
-			_animationSpeed = Integer.parseInt(_properties.getProperty("default_animation_speed"));
+			// 初期処理
+			initProc();
 
 			// ファイル監視
 			fileMonitor();
@@ -77,7 +73,7 @@ public class MainSketch extends PApplet {
 			PApplet.main("com.awesomebase.processing.MainSketch");
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			_logger.error("*** System Error!! ***", e);
 		}
 	}
 
@@ -87,19 +83,18 @@ public class MainSketch extends PApplet {
 	@Override
 	public void settings() {
 		try {
-
 			if ("1".equals(_properties.getProperty("full_screen"))) {
 				//----------------------------
 				// フルスクリーンモードで表示
 				//----------------------------
-				int display = Integer.parseInt(_properties.getProperty("display"));
-				fullScreen(P2D, display);
+				int display = Integer.parseInt(_properties.getProperty("display_no"));
+				fullScreen(display);
 			} else {
 				//----------------------------
 				// デフォルト画面サイズで表示
 				//----------------------------
 				String[] scrennSize = _properties.getProperty("screen_size").split(",");
-				size(Integer.parseInt(scrennSize[0]), Integer.parseInt(scrennSize[1]), P2D);
+				size(Integer.parseInt(scrennSize[0]), Integer.parseInt(scrennSize[1]));
 			}
 
 			// Processingメソッド以外で変数が読み取れないため保持
@@ -107,7 +102,7 @@ public class MainSketch extends PApplet {
 			_height = height;
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			_logger.error("*** System Error!! ***", e);
 			exit();
 		}
 	}
@@ -122,8 +117,6 @@ public class MainSketch extends PApplet {
 			surface.setTitle("");
 			surface.setResizable(true);
 
-//			noSmooth();
-
 			// Processingメソッド以外で変数が読み取れないため保持
 			_width = width;
 			_height = height;
@@ -131,6 +124,10 @@ public class MainSketch extends PApplet {
 			if ("0".equals(_backgroundMode)) {
 				// 背景画像の読み込み、リサイズ
 				_backgroundImg = loadImage(_properties.getProperty("file_background_image"));
+				if (_backgroundImg == null) {
+					_logger.error("Could not load image file " + _properties.getProperty("file_background_image"));
+					exit();
+				}
 				_backgroundImg.resize(width, height);
 			} else if ("1".equals(_backgroundMode)) {
 				// 背景画像の読み込み、リサイズ
@@ -145,13 +142,17 @@ public class MainSketch extends PApplet {
 			final List<File> fileList = (List<File>) FileUtils.listFiles(new File(_properties.getProperty("dir_animated_image")), FileFilterUtils.suffixFileFilter(".png"), FileFilterUtils.trueFileFilter());
 			_animatedImgList = Collections.synchronizedList(new ArrayList<AnimatedImage>());
 			for (final File file : fileList) {
-				// アニメーション画像クラス作成・初期化
-				AnimatedImage aimg = createAnimatedImage(file);
-				// リストに追加
-				_animatedImgList.add(aimg);
+				if (file.canRead()) {
+					// アニメーション画像クラス作成・初期化
+					AnimatedImage aimg = createAnimatedImage(file);
+					// リストに追加
+					_animatedImgList.add(aimg);
+				} else {
+					_logger.warn("Could not read image file " + file.getName());
+				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			_logger.error("*** System Error!! ***", e);
 			exit();
 		}
 	}
@@ -300,7 +301,7 @@ public class MainSketch extends PApplet {
 		    }
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			_logger.error("***** System Error!! *****", e);
 			exit();
 		}
 	}
@@ -350,6 +351,8 @@ public class MainSketch extends PApplet {
 	 */
 	private static AnimatedImage createAnimatedImage(File file) {
 
+		_logger.info("Create animated image " + file.getName());
+
 		// 画像透過処理
 		BufferedImage bimg = ImageUtil.Transparency(file);
 		// 補正値により画像透過処理（★処理に時間がかかる...）
@@ -388,8 +391,7 @@ public class MainSketch extends PApplet {
 		PImage pimg = new PImage(bimg);
 
 		// デフォルトサイズに調整
-		int defaultImageWidth = Integer.parseInt(_properties.getProperty("default_image_width"));
-		pimg.resize(defaultImageWidth, 0);
+		pimg.resize(_defaultImageWidth, 0);
 
 		// アニメーション速度
 		aimg.setSpeed(_animationSpeed);
@@ -420,7 +422,6 @@ public class MainSketch extends PApplet {
 		long interval = Long.parseLong(_properties.getProperty("dir_monitoring_interval"));
 		// Monitorの生成。監視間隔はミリ秒。
 		FileAlterationMonitor monitor = new FileAlterationMonitor(interval);
-
 		// Observerの生成。監視するディレクトリを指定。
 		File dir = new File(_properties.getProperty("dir_animated_image"));
 		FileAlterationObserver observer = new FileAlterationObserver(dir);
@@ -435,7 +436,7 @@ public class MainSketch extends PApplet {
 					// リストに追加
 					_animatedImgList.add(aimg);
 				} else {
-					System.out.println("Error!! File Can't Read or Not PNG file. " + file.getName());
+					_logger.warn("Could not read image file or not 'PNG' file " + file.getName());
 				}
 			}
 		};
@@ -446,5 +447,57 @@ public class MainSketch extends PApplet {
 		// Monitorの起動
 		monitor.start();
 	}
+
+	/**
+	 * 初期処理
+	 */
+	private static void initProc() {
+
+		// 背景モード
+		_backgroundMode = _properties.getProperty("background_mode");
+		// 最大表示数
+		_maxImageCount = Integer.parseInt(_properties.getProperty("max_image_count"));
+		// アニメーション画像の初期幅
+		_defaultImageWidth = Integer.parseInt(_properties.getProperty("default_image_width"));
+		// デフォルトアニメーション速度
+		_animationSpeed = Integer.parseInt(_properties.getProperty("default_animation_speed"));
+		// 最大倍率
+		_maxImageScale = Float.parseFloat(_properties.getProperty("max_image_scale"));
+		// 最小倍率
+		_minImageScale = Float.parseFloat(_properties.getProperty("min_image_scale"));
+
+		_logger.info("--- System Settings ---------------------------------------");
+		_logger.info("full_screen             : " + _properties.getProperty("background_mode"));
+		_logger.info("display_no              : " + _properties.getProperty("display_no"));
+		_logger.info("screen_size             : " + _properties.getProperty("screen_size"));
+		_logger.info("dir_animated_image      : " + _properties.getProperty("dir_animated_image"));
+		_logger.info("dir_monitoring_interval : " + _properties.getProperty("dir_monitoring_interval"));
+		_logger.info("background_mode         : " + _properties.getProperty("background_mode"));
+		_logger.info("file_background_image   : " + _properties.getProperty("file_background_image"));
+		_logger.info("file_background_movie   : " + _properties.getProperty("file_background_movie"));
+		_logger.info("default_image_width     : " + _properties.getProperty("default_image_width"));
+		_logger.info("max_image_count         : " + _properties.getProperty("max_image_count"));
+		_logger.info("max_image_scale         : " + _properties.getProperty("max_image_scale"));
+		_logger.info("min_image_scale         : " + _properties.getProperty("min_image_scale"));
+		_logger.info("default_animation_speed : " + _properties.getProperty("default_animation_speed"));
+		_logger.info("-----------------------------------------------------------");
+
+		File chk;
+		// 各ファイルパスの疎通チェック
+		chk = new File(_properties.getProperty("dir_animated_image"));
+		if (!chk.isDirectory()) {
+			_logger.warn("Path not directory " + _properties.getProperty("dir_animated_image"));
+		}
+		chk = new File(_properties.getProperty("file_background_image"));
+		if (!chk.exists()) {
+			_logger.warn("File not exists " + _properties.getProperty("file_background_image"));
+		}
+		chk = new File(_properties.getProperty("file_background_movie"));
+		if (!chk.exists()) {
+			_logger.warn("File not exists " + _properties.getProperty("file_background_movie"));
+		}
+
+	}
+
 
 }

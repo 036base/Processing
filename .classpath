@@ -14,5 +14,7 @@
 	<classpathentry kind="lib" path="lib/jogl-all.jar"/>
 	<classpathentry kind="lib" path="lib/gluegen-rt-natives-windows-amd64.jar"/>
 	<classpathentry kind="lib" path="lib/jogl-all-natives-windows-amd64.jar"/>
+	<classpathentry kind="lib" path="lib/log4j-core-2.8.2.jar"/>
+	<classpathentry kind="lib" path="lib/log4j-api-2.8.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
