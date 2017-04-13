@@ -57,6 +57,8 @@ public class MainSketch extends PApplet {
 
 	public static void main(String[] args) {
 		try {
+			_logger.info("Main start...");
+
 			// 設定ファイル読み込み
 			_properties = new Properties();
 			InputStream inputStream = new FileInputStream("processing.properties");
@@ -83,6 +85,8 @@ public class MainSketch extends PApplet {
 	@Override
 	public void settings() {
 		try {
+			_logger.info("Settings...");
+
 			if ("1".equals(_properties.getProperty("full_screen"))) {
 				//----------------------------
 				// フルスクリーンモードで表示
@@ -113,6 +117,8 @@ public class MainSketch extends PApplet {
 	@Override
 	public void setup() {
 		try {
+			_logger.info("Setup...");
+
 			// 画面のタイトル、リサイズ許可設定
 			surface.setTitle("");
 			surface.setResizable(true);
@@ -307,6 +313,24 @@ public class MainSketch extends PApplet {
 	}
 
 	/**
+	 * Processing exit
+	 */
+	@Override
+	public void exit() {
+		_logger.info("Exit...");
+		super.exit();
+	}
+
+	/**
+	 * Processing dispose
+	 */
+	@Override
+	public void dispose() {
+		_logger.info("Dispose...");
+		super.dispose();
+	}
+
+	/**
 	 * Processing KeyPressed
 	 */
 	@Override
@@ -446,6 +470,7 @@ public class MainSketch extends PApplet {
 		monitor.addObserver(observer);
 		// Monitorの起動
 		monitor.start();
+		_logger.info("File monitoring started...");
 	}
 
 	/**
@@ -485,6 +510,9 @@ public class MainSketch extends PApplet {
 		File chk;
 		// 各ファイルパスの疎通チェック
 		chk = new File(_properties.getProperty("dir_animated_image"));
+		if (!chk.exists()) {
+			_logger.warn("Path not exists " + _properties.getProperty("dir_animated_image"));
+		}
 		if (!chk.isDirectory()) {
 			_logger.warn("Path not directory " + _properties.getProperty("dir_animated_image"));
 		}
