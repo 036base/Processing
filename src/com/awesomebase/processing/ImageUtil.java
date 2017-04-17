@@ -97,7 +97,7 @@ public class ImageUtil {
 	}
 
 	/**
-	 * 透過処理 白、黒、画像四隅の色を透過
+	 * 透過処理 白、画像四隅の色を透過
 	 *
 	 * @param file
 	 */
@@ -113,19 +113,19 @@ public class ImageUtil {
 
 			bimg = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
 
-			// 透過対象RGB
-			int[] tRGB = {Color.WHITE.getRGB(), Color.WHITE.getRGB(), Color.WHITE.getRGB(), Color.WHITE.getRGB()};
-			// 画像の四隅1pxも透過対象にする
-			tRGB[0] = readImg.getRGB(0, 0);
-			tRGB[1] = readImg.getRGB(readImg.getWidth() - 1, 0);
-			tRGB[2] = readImg.getRGB(0, readImg.getHeight() - 1);
-			tRGB[3] = readImg.getRGB(readImg.getWidth() - 1, readImg.getHeight() - 1);
+			// 透過対象RGB（画像の四隅1p）
+			int[] tRGB = {
+					readImg.getRGB(0, 0),
+					readImg.getRGB(readImg.getWidth() - 1, 0),
+					readImg.getRGB(0, readImg.getHeight() - 1),
+					readImg.getRGB(readImg.getWidth() - 1, readImg.getHeight() - 1)
+			};
 
 			for (int y = 0; y < height; ++y) {
 				for (int x = 0; x < width; ++x) {
 					int rgb = readImg.getRGB(x, y);
-					if (readImg.getRGB(x, y) == Color.WHITE.getRGB() || readImg.getRGB(x, y) == Color.BLACK.getRGB()) {
-						// 白、黒は透過
+					if (readImg.getRGB(x, y) == Color.WHITE.getRGB()) {
+						// 白は透過
 						rgb = 0;
 					} else {
 						for (int c = 0; c < tRGB.length; c++) {
