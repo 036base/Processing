@@ -1,10 +1,6 @@
 package com.awesomebase.processing;
 
-import java.awt.Point;
 import java.awt.image.BufferedImage;
-import java.awt.image.DataBufferInt;
-import java.awt.image.Raster;
-import java.awt.image.WritableRaster;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -50,18 +46,18 @@ public class MainSketch extends PApplet {
 	private float _maxImageScale;		// 最大倍率
 	private float _minImageScale;		// 最小倍率
 
-//	private  List<AnimatedImage> _animatedImgList;
-//	private  CollectionsComparator _comparator = new CollectionsComparator();
 	private  List<Animation> _animatedImgList;
 
 
 	public static void main(String[] args) {
 		Logger logger = LogManager.getLogger();
 		try {
-			logger.info("Main start...");
+			String className = Thread.currentThread().getStackTrace()[1].getClassName();
+
+			logger.info("{} start...", className);
 
 			// Processing起動
-			PApplet.main("com.awesomebase.processing.MainSketch");
+			PApplet.main(className);
 
 		} catch (Exception e) {
 			logger.error("*** System Error!! ***", e);
@@ -74,6 +70,8 @@ public class MainSketch extends PApplet {
 	@Override
 	public void settings() {
 		try {
+			_logger.info("Settings...");
+
 			// 設定ファイル読み込み
 			_properties = new Properties();
 			InputStream inputStream = new FileInputStream("processing.properties");
@@ -83,29 +81,21 @@ public class MainSketch extends PApplet {
 			// 初期処理
 			initProc();
 
-			// ファイル監視
-			fileMonitor();
-
-			_logger.info("Settings...");
-
 			if ("1".equals(_properties.getProperty("full_screen"))) {
-				//----------------------------
 				// フルスクリーンモードで表示
-				//----------------------------
 				int display = Integer.parseInt(_properties.getProperty("display_no"));
-//				fullScreen(display);
-				fullScreen(P2D,display);
+				fullScreen(P2D, display);
 			} else {
-				//----------------------------
 				// デフォルト画面サイズで表示
-				//----------------------------
 				String[] scrennSize = _properties.getProperty("screen_size").split(",");
-//				size(Integer.parseInt(scrennSize[0]), Integer.parseInt(scrennSize[1]));
-				size(Integer.parseInt(scrennSize[0]), Integer.parseInt(scrennSize[1]),P2D);
+				size(Integer.parseInt(scrennSize[0]), Integer.parseInt(scrennSize[1]), P2D);
 			}
 
 			// アンチエイリアス無効
 			noSmooth();
+
+			// ファイル監視
+			fileMonitor();
 
 		} catch (Exception e) {
 			_logger.error("*** System Error!! ***", e);
@@ -126,15 +116,14 @@ public class MainSketch extends PApplet {
 			surface.setResizable(true);
 
 			if ("0".equals(_backgroundMode)) {
-				// 背景画像の読み込み、リサイズ
+				// 背景画像の読み込み
 				_backgroundImg = loadImage(_properties.getProperty("file_background_image"));
 				if (_backgroundImg == null) {
 					_logger.error("Could not load image file " + _properties.getProperty("file_background_image"));
 					exit();
 				}
-				_backgroundImg.resize(width, height);
 			} else if ("1".equals(_backgroundMode)) {
-				// 背景画像の読み込み、リサイズ
+				// 背景動画の読み込み、再生設定
 				_backgroundMov = new Movie(this, _properties.getProperty("file_background_movie"));
 				_backgroundMov.loop();	// ループ再生
 				_backgroundMov.play();	// 再生
@@ -144,17 +133,6 @@ public class MainSketch extends PApplet {
 
 			// アニメーション画像フォルダから拡張子が「.png」のファイルを取得
 			final List<File> fileList = (List<File>) FileUtils.listFiles(new File(_properties.getProperty("dir_animated_image")), FileFilterUtils.suffixFileFilter(".png"), FileFilterUtils.trueFileFilter());
-//			_animatedImgList = Collections.synchronizedList(new ArrayList<AnimatedImage>());
-//			for (final File file : fileList) {
-//				if (file.canRead()) {
-//					// アニメーション画像クラス作成・初期化
-//					AnimatedImage aimg = createAnimatedImage(file);
-//					// リストに追加
-//					_animatedImgList.add(aimg);
-//				} else {
-//					_logger.warn("Could not read image file " + file.getName());
-//				}
-//			}
 			_animatedImgList = Collections.synchronizedList(new ArrayList<Animation>());
 			for (final File file : fileList) {
 				if (file.canRead()) {
@@ -177,9 +155,8 @@ public class MainSketch extends PApplet {
 	public void draw() {
 		try {
 			if ("0".equals(_backgroundMode)) {
-				// 背景画像をリサイズ、描画
-				_backgroundImg.resize(width, height);
-				image(_backgroundImg, 0, 0);
+				// 背景画像を描画
+				image(_backgroundImg, 0, 0, width, height);
 			} else if ("1".equals(_backgroundMode)) {
 				 // 背景動画を表示
 				 image(_backgroundMov, 0, 0, width, height);
@@ -187,127 +164,6 @@ public class MainSketch extends PApplet {
 				// 背景なし
 				background(0);
 			}
-
-//			PImage pimg;
-//			WritableRaster wr;
-//			int x, y, dirX, dirY, speed;
-//			float scale;
-//			boolean turn;
-//
-//			// 古い順に削除
-//			if (_animatedImgList.size() > _maxImageCount) {
-//				// UIDの昇順でソート
-//				Collections.sort(_animatedImgList, _comparator.new UidComparator());
-//				_animatedImgList.subList(0, _animatedImgList.size() -_maxImageCount).clear();
-//			}
-//
-//			// 倍率の昇順でソート（大きいものが手前にくる）
-//			Collections.sort(_animatedImgList, _comparator.new ScaleComparator());
-//
-//		    for (int i = 0; i < _animatedImgList.size(); i++) {
-//		    	// 画像情報を取得
-//				pimg = _animatedImgList.get(i).getImg();
-//				x = _animatedImgList.get(i).getX();
-//				y = _animatedImgList.get(i).getY();
-//				dirX = _animatedImgList.get(i).getDirX();
-//				dirY = _animatedImgList.get(i).getDirY();
-//				scale = _animatedImgList.get(i).getScale();
-//				speed = _animatedImgList.get(i).getSpeed();
-//
-//				int randomSpeed = randomInt(100) + 1;
-//				if (randomSpeed <= 3) {
-//					// 速度をアップ
-//					speed = _animationSpeed + randomSpeed;
-//				} else if (randomSpeed >= 90) {
-//					// 速度を戻す
-//					speed = _animationSpeed;
-//				}
-//
-//				turn = false;
-//				int randomDir = randomInt(1000);
-//				if (((x + dirX * speed) < 0) || ((x + dirX * speed) > width - pimg.width)) {
-//					// X軸進行方向を逆転
-//					dirX = -dirX;
-//					turn = true;
-//				} else {
-//					// ランダムに方向転換
-//					if (randomDir >= 1 && randomDir <= 5) {
-//						// X軸進行方向を逆転
-//						dirX = -dirX;
-//						turn = true;
-//					}
-//				}
-//
-//				if (((y + dirY * speed) < 0) || ((y + dirY * speed) > height - pimg.height)) {
-//					// Y軸進行方向を逆転
-//					dirY = -dirY;
-//				} else {
-//					// ランダムに方向転換
-//					if (randomDir >= 11 && randomDir <= 15) {
-//						// Y軸進行方向を逆転
-//						dirY = -dirY;
-//					}
-//				}
-//
-//				x += dirX * speed;
-//				y += dirY * speed;
-//
-//
-//				if (turn) {
-//					// 画像を左右反転
-//					BufferedImage bimgFH = ImageUtil.PImage2BImage(pimg);
-//					bimgFH = ImageUtil.FlipHorizontal(bimgFH);
-//					DataBufferInt dbi = new DataBufferInt(pimg.pixels, pimg.pixels.length);
-//					wr = Raster.createWritableRaster(bimgFH.getSampleModel(), dbi, new Point(0, 0));
-//					bimgFH.copyData(wr);
-//					pimg.updatePixels();
-//				}
-//
-//				// リサイズ前の画像を保持
-//				_animatedImgList.get(i).setImg(pimg.copy());
-//
-//
-//				// 進行方向に画像が向くように回転する
-//				pushMatrix();
-//				// 画像中央を回転の中心にする
-//				translate(x + pimg.width / 2, y + pimg.height / 2);
-//				// 回転する
-//				float deg = 45 * dirX * dirY;
-//				rotate(radians(deg));
-//
-//				// 回転の中心が画像中央なので、画像描画原点も画像中央にする
-//				// こうすると、(0,0)に配置すれば期待した位置に画像が置ける
-//				// これをしないと、image()命令で配置する座標計算が面倒になる
-//				imageMode(CENTER);
-//
-//				// 拡大縮小
-//				scale += (0.01f * dirX * dirY);
-//				if (scale > _maxImageScale) {
-//					scale = _maxImageScale;
-//				}
-//				if (scale < _minImageScale) {
-//					scale = _minImageScale;
-//				}
-//				scale(scale);
-//
-//				// 画像を描画
-//				image(pimg, 0, 0);
-//
-//				// 画像描画原点を元（画像の左上隅）に戻す
-//				imageMode(CORNER);
-//
-//				popMatrix();
-//
-//
-//				// 画像情報を保持
-//				_animatedImgList.get(i).setX(x);
-//				_animatedImgList.get(i).setY(y);
-//				_animatedImgList.get(i).setDirX(dirX);
-//				_animatedImgList.get(i).setDirY(dirY);
-//				_animatedImgList.get(i).setScale(scale);
-//				_animatedImgList.get(i).setSpeed(speed);
-//
-//		    }
 
 			if (_animatedImgList.size() > _maxImageCount) {
 				// UIDの昇順でソート
@@ -319,8 +175,10 @@ public class MainSketch extends PApplet {
 			// 倍率の昇順でソート（大きいものが手前にくるように）
 			Collections.sort(_animatedImgList, new ScaleComparator());
 
+			// アニメーション描画処理
 			for (int i = 0; i < _animatedImgList.size(); i++) {
 				_animatedImgList.get(i).update();
+				_animatedImgList.get(i).draw();
 			}
 
 		} catch (Exception e) {
@@ -383,77 +241,6 @@ public class MainSketch extends PApplet {
 	}
 
 
-
-//	/**
-//	 * アニメーション画像クラス作成・初期化
-//	 *
-//	 * @param file
-//	 * @return
-//	 */
-//	private  AnimatedImage createAnimatedImage(File file) {
-//
-//		_logger.info("Create animated image " + file.getName());
-//
-//		// 画像透過処理
-//		BufferedImage bimg = ImageUtil.Transparency(file);
-//		// 補正値により画像透過処理（★処理に時間がかかる...）
-//		//String correction_value = _properties.getProperty("correction_value");
-//		//bimg = ImageUtil.Transparency(file, Integer.parseInt(correction_value));
-//
-//
-//		AnimatedImage aimg = new AnimatedImage();
-//
-//		// UID
-//		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmssSSS");
-//		aimg.setUid(Long.parseLong(sdf.format( Calendar.getInstance().getTime())));
-//
-//		// 初期座標を設定
-//		aimg.setX((randomInt(width - bimg.getWidth()) + 1));
-//		aimg.setY((randomInt(height - bimg.getHeight()) + 1));
-//
-//		// 進行方向を設定
-//		if (randomInt(2) == 1) {
-//			aimg.setDirX(1);
-//		} else {
-//			aimg.setDirX(-1);
-//		}
-//		if (randomInt(2) == 0) {
-//			aimg.setDirY(1);
-//		} else {
-//			aimg.setDirY(-1);
-//		}
-//
-//		// アニメーション画像設定（※基本画像は左向き）
-//		if (aimg.getDirX() > 0) {
-//			// 左右反転
-//			bimg = ImageUtil.FlipHorizontal(bimg);
-//		}
-//
-//		PImage pimg = new PImage(bimg);
-//
-//		// デフォルトサイズに調整
-//		pimg.resize(_defaultImageWidth, 0);
-//
-//		// アニメーション速度
-//		aimg.setSpeed(_animationSpeed);
-//
-//		aimg.setImg(pimg);
-//
-//		return aimg;
-//	}
-
-
-//	/**
-//	 * ランダム値取得
-//	 */
-//	private  int randomInt(int max) {
-//
-//		Random rand = new Random();
-//		return rand.nextInt(max);
-//
-//	}
-
-
 	/**
 	 * ファイル監視
 	 *
@@ -472,10 +259,6 @@ public class MainSketch extends PApplet {
 			@Override
 			public void onFileCreate(File file) {
 				if (file.canRead() && file.getPath().endsWith(".png")) {
-//					// アニメーション画像クラス作成・初期化
-//					AnimatedImage aimg = createAnimatedImage(file);
-//					// リストに追加
-//					_animatedImgList.add(aimg);
 					// アニメーション画像クラスを作成・初期化してリストに追加
 					_animatedImgList.add(new Animation(file));
 				} else {
@@ -561,11 +344,6 @@ public class MainSketch extends PApplet {
 		private int _speed = 1;		// 速度
 		private float _scale = 1.0f;	// 倍率
 
-		/**
-		 * コンストラクタ
-		 *
-		 * @param file
-		 */
 		public Animation(File file) {
 			_logger.info("Create image " + file.getName());
 
@@ -576,9 +354,14 @@ public class MainSketch extends PApplet {
 			// 画像透過処理
 			BufferedImage bimg = ImageUtil.Transparency(file);
 
+			// PImage生成
+			_img = new PImage(bimg);
+			// デフォルトサイズに調整
+			_img.resize(_defaultImageWidth, 0);
+
 			// 初期座標を設定
-			_x = (int) random(1, width - bimg.getWidth());
-			_y = (int) random(1, height - bimg.getHeight());
+			_x = (int) random(_img.width, width - _img.width);
+			_y = (int) random(_img.height, height - _img.height);
 
 			// 進行方向を設定
 			_dirX = 1;
@@ -593,26 +376,12 @@ public class MainSketch extends PApplet {
 			// アニメーション速度
 			_speed = _animationSpeed;
 
-			// アニメーション画像設定（※基本画像は左向き）
-			if (_dirX > 0) {
-				// 左右反転
-				bimg = ImageUtil.FlipHorizontal(bimg);
-			}
-
-			// PImage生成
-			PImage pimg = new PImage(bimg);
-			// デフォルトサイズに調整
-			pimg.resize(_defaultImageWidth, 0);
-			_img = pimg;
-
 		}
 
-		/**
-		 * アニメーション更新
-		 */
 		public void update() {
 
 			int rand = (int) random(1, 1000);
+
 			if (rand <= 50) {
 				// 速度をアップ
 				_speed = _animationSpeed + ceil(rand / 100);
@@ -621,17 +390,14 @@ public class MainSketch extends PApplet {
 				_speed = _animationSpeed;
 			}
 
-			boolean turn = false;
 			if (((_x + _dirX * _speed) < 0) || ((_x + _dirX * _speed) > width - _img.width)) {
 				// X軸進行方向を逆転
 				_dirX = -_dirX;
-				turn = true;
 			} else {
 				// ランダムに方向転換
 				if (rand >= 1 && rand <= 5) {
 					// X軸進行方向を逆転
 					_dirX = -_dirX;
-					turn = true;
 				}
 			}
 
@@ -649,15 +415,9 @@ public class MainSketch extends PApplet {
 			_x += _dirX * _speed;
 			_y += _dirY * _speed;
 
-			if (turn) {
-				// 画像を左右反転
-				BufferedImage bimgFH = ImageUtil.PImage2BImage(_img);
-				bimgFH = ImageUtil.FlipHorizontal(bimgFH);
-				DataBufferInt dbi = new DataBufferInt(_img.pixels, _img.pixels.length);
-				WritableRaster wr = Raster.createWritableRaster(bimgFH.getSampleModel(), dbi, new Point(0, 0));
-				bimgFH.copyData(wr);
-				_img.updatePixels();
-			}
+		}
+
+		public void draw() {
 
 			pushMatrix();
 
@@ -666,6 +426,11 @@ public class MainSketch extends PApplet {
 			// 進行方向に画像が向くように回転する
 			float deg = 45 * _dirX * _dirY;
 			rotate(radians(deg));
+
+			if (_dirX > 0) {
+				// 左右反転（※基本画像は左向き）
+				scale(-1, 1);
+			}
 
 			// 回転の中心が画像中央なので、画像描画原点も画像中央にする
 			// こうすると、(0,0)に配置すれば期待した位置に画像が置ける
