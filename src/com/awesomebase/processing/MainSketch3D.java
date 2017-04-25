@@ -179,8 +179,8 @@ public class MainSketch3D extends PApplet {
 
 			// アニメーション描画処理
 			for (int i = 0; i < _animatedImgList.size(); i++) {
-				_animatedImgList.get(i).update();
 				_animatedImgList.get(i).draw();
+				_animatedImgList.get(i).update();
 			}
 
 		} catch (Exception e) {
@@ -329,7 +329,8 @@ public class MainSketch3D extends PApplet {
 	 */
 	public class Animation {
 		private long _uid;					// ユニークID
-		private PImage _img;				// イメージ
+		private PImage _imgF;				// イメージ前部
+		private PImage _imgR;				// イメージ後部
 		private PVector _pos;				// 現在座標
 		private PVector _des;				// 目標座標
 		private float _easing = 0.01f;	// 近づく速度
@@ -338,6 +339,7 @@ public class MainSketch3D extends PApplet {
 		private int _moveDir = 1;			// ヒラヒラ向き
 		private float _maxAngle = 0;		// ヒラヒラ最大角度
 		private float _incAngle = 0;		// ヒラヒラ増加角度
+
 
 		public Animation(File file) {
 			_logger.info("Create image " + file.getName());
@@ -350,9 +352,13 @@ public class MainSketch3D extends PApplet {
 			BufferedImage bimg = ImageUtil.Transparency(file);
 
 			// PImage生成
-			_img = new PImage(bimg);
+			PImage pimg = new PImage(bimg);
 			// デフォルトサイズに調整
-			_img.resize(_defaultImageWidth, 0);
+			pimg.resize(_defaultImageWidth, 0);
+
+			// 画像を前後に分ける
+			_imgF = pimg.get(0, 0, floor(pimg.width / 2), pimg.height);
+			_imgR = pimg.get(ceil(pimg.width / 2), 0, pimg.width, pimg.height);
 
 			// 初期設定
 			_pos = new PVector(random(0, width), random(0, height), 0);
@@ -397,9 +403,7 @@ public class MainSketch3D extends PApplet {
 		public void draw() {
 
 			pushMatrix();
-			translate(_pos.x + _img.width / 2, _pos.y + _img.height / 2, _pos.z);
-
-			//imageMode(CENTER);
+			translate(_pos.x, _pos.y, _pos.z);
 
 			// X軸とZ軸進行方向を向く
 			float angleY = atan2(_des.x - _pos.x, _des.z - _pos.z);
@@ -413,12 +417,16 @@ public class MainSketch3D extends PApplet {
 			}
 			rotate(-angleZ);
 
-			// ヒラヒラさせる
+			// 前部の描画
+			image(_imgF, 0, 0);
+
+			pushMatrix();
+			translate(_imgF.width, 0, 0);
+			// 後部だけヒラヒラさせる
 			rotateY(radians(_moveAngle));
-
-			image(_img, 0, 0);
-
-			//imageMode(CORNER);
+			// 後部の描画
+			image(_imgR, 0, 0);
+			popMatrix();
 
 			popMatrix();
 
