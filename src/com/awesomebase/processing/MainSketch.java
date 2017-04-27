@@ -142,6 +142,9 @@ public class MainSketch extends PApplet {
 					_logger.warn("Could not read image file " + file.getName());
 				}
 			}
+			//TODO:ラムダ式で書くと...
+//			_animatedImgList = fileList.stream().map(file -> new Animation(file)).collect(Collectors.toList());
+
 		} catch (Exception e) {
 			_logger.error("*** System Error!! ***", e);
 			exit();
@@ -168,6 +171,8 @@ public class MainSketch extends PApplet {
 			if (_animatedImgList.size() > _maxImageCount) {
 				// UIDの昇順でソート
 				Collections.sort(_animatedImgList, new UidComparator());
+				//TODO:ラムダ式で書くと...
+//				_animatedImgList.sort((p1, p2) -> Long.compare(p1._uid, p2._uid));
 				// 古い順に削除
 				_animatedImgList.subList(0, _animatedImgList.size() -_maxImageCount).clear();
 			}
@@ -180,6 +185,14 @@ public class MainSketch extends PApplet {
 				_animatedImgList.get(i).update();
 				_animatedImgList.get(i).draw();
 			}
+			//TODO:ラムダ式で書くと...
+			// 倍率の昇順でソートして描画
+//			_animatedImgList.stream()
+//					.sorted(Comparator.comparing(Animation::getScale))
+//					.forEach(a -> {
+//						a.update();
+//						a.draw();
+//					});
 
 		} catch (Exception e) {
 			_logger.error("***** System Error!! *****", e);
@@ -455,6 +468,70 @@ public class MainSketch extends PApplet {
 
 			popMatrix();
 
+		}
+
+		public long getUid() {
+			return _uid;
+		}
+
+		public void setUid(long uid) {
+			_uid = uid;
+		}
+
+		public PImage getImg() {
+			return _img;
+		}
+
+		public void setImg(PImage img) {
+			_img = img;
+		}
+
+		public int getX() {
+			return _x;
+		}
+
+		public void setX(int x) {
+			_x = x;
+		}
+
+		public int getY() {
+			return _y;
+		}
+
+		public void setY(int y) {
+			_y = y;
+		}
+
+		public int getDirX() {
+			return _dirX;
+		}
+
+		public void setDirX(int dirX) {
+			_dirX = dirX;
+		}
+
+		public int getDirY() {
+			return _dirY;
+		}
+
+		public void setDirY(int dirY) {
+			_dirY = dirY;
+		}
+
+		public int getSpeed() {
+			return _speed;
+		}
+
+		public void setSpeed(int speed) {
+			_speed = speed;
+		}
+
+		public float getScale() {
+			return _scale;
+		}
+
+		public void setScale(float scale) {
+			_scale = scale;
 		}
 
 	}

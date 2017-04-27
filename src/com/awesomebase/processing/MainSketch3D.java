@@ -142,6 +142,9 @@ public class MainSketch3D extends PApplet {
 					_logger.warn("Could not read image file " + file.getName());
 				}
 			}
+			//TODO:ラムダ式で書くと...
+//			_animatedImgList = fileList.stream().map(file -> new Animation(file)).collect(Collectors.toList());
+
 		} catch (Exception e) {
 			_logger.error("*** System Error!! ***", e);
 			exit();
@@ -173,6 +176,8 @@ public class MainSketch3D extends PApplet {
 			if (_animatedImgList.size() > _maxImageCount) {
 				// UIDの昇順でソート
 				Collections.sort(_animatedImgList, new UidComparator());
+				//TODO:ラムダ式で書くと...
+//				_animatedImgList.sort((p1, p2) -> Long.compare(p1._uid, p2._uid));
 				// 古い順に削除
 				_animatedImgList.subList(0, _animatedImgList.size() -_maxImageCount).clear();
 			}
@@ -182,6 +187,11 @@ public class MainSketch3D extends PApplet {
 				_animatedImgList.get(i).draw();
 				_animatedImgList.get(i).update();
 			}
+			//TODO:ラムダ式で書くと...
+//			_animatedImgList.forEach(a -> {
+//				a.update();
+//				a.draw();
+//			});
 
 		} catch (Exception e) {
 			_logger.error("***** System Error!! *****", e);
@@ -377,7 +387,7 @@ public class MainSketch3D extends PApplet {
 
 			// 目標座標に近づいたら目標座標を変更
 			float d = dist(_pos.x, _pos.y, _pos.z, _des.x, _des.y, _des.z);
-			if (d < 30) {
+			if (d < 20) {
 				//  一定の距離以上となるまで設定を続ける
 //				do {
 //					_des.x = random(-100, width + 100);
@@ -430,6 +440,86 @@ public class MainSketch3D extends PApplet {
 
 			popMatrix();
 
+		}
+
+		public long getUid() {
+			return _uid;
+		}
+
+		public void setUid(long uid) {
+			_uid = uid;
+		}
+
+		public PImage getImgF() {
+			return _imgF;
+		}
+
+		public void setImgF(PImage imgF) {
+			_imgF = imgF;
+		}
+
+		public PImage getImgR() {
+			return _imgR;
+		}
+
+		public void setImgR(PImage imgR) {
+			_imgR = imgR;
+		}
+
+		public PVector getPos() {
+			return _pos;
+		}
+
+		public void setPos(PVector pos) {
+			_pos = pos;
+		}
+
+		public PVector getDes() {
+			return _des;
+		}
+
+		public void setDes(PVector des) {
+			_des = des;
+		}
+
+		public float getEasing() {
+			return _easing;
+		}
+
+		public void setEasing(float easing) {
+			_easing = easing;
+		}
+
+		public float getMoveAngle() {
+			return _moveAngle;
+		}
+
+		public void setMoveAngle(float moveAngle) {
+			_moveAngle = moveAngle;
+		}
+
+		public int getMoveDir() {
+			return _moveDir;
+		}
+
+		public void setMoveDir(int moveDir) {
+			_moveDir = moveDir;
+		}
+
+		public float getMaxAngle() {
+			return _maxAngle;
+		}
+
+		public void setMaxAngle(float maxAngle) {
+			_maxAngle = maxAngle;
+		}
+
+		public float getIncAngle() {
+			return _incAngle;
+		}
+
+		public void setIncAngle(float incAngle) {
+			_incAngle = incAngle;
 		}
 
 	}
