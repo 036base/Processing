@@ -8,9 +8,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
@@ -43,8 +43,10 @@ public class MainSketch3D extends PApplet {
 	private Movie _backgroundMov;		// 背景ムービー
 	private int _maxImageCount;		// 最大表示数
 	private int _defaultImageWidth;	// アニメーション画像の初期幅
-
+	private int _animationSpeed;		// デフォルトアニメーション速度
 	private  List<Animation> _animatedImgList;
+
+	private boolean _recording = false;
 
 
 	public static void main(String[] args) {
@@ -133,17 +135,10 @@ public class MainSketch3D extends PApplet {
 
 			// アニメーション画像フォルダから拡張子が「.png」のファイルを取得
 			final List<File> fileList = (List<File>) FileUtils.listFiles(new File(_properties.getProperty("dir_animated_image")), FileFilterUtils.suffixFileFilter(".png"), FileFilterUtils.trueFileFilter());
+
+			// アニメーション画像クラスを作成・初期化してリストに追加
 			_animatedImgList = Collections.synchronizedList(new ArrayList<Animation>());
-			for (final File file : fileList) {
-				if (file.canRead()) {
-					// アニメーション画像クラスを作成・初期化してリストに追加
-					_animatedImgList.add(new Animation(file));
-				} else {
-					_logger.warn("Could not read image file " + file.getName());
-				}
-			}
-			//TODO:ラムダ式で書くと...
-//			_animatedImgList = fileList.stream().map(file -> new Animation(file)).collect(Collectors.toList());
+			_animatedImgList = fileList.stream().map(file -> new Animation(file)).collect(Collectors.toList());
 
 		} catch (Exception e) {
 			_logger.error("*** System Error!! ***", e);
@@ -175,23 +170,21 @@ public class MainSketch3D extends PApplet {
 
 			if (_animatedImgList.size() > _maxImageCount) {
 				// UIDの昇順でソート
-				Collections.sort(_animatedImgList, new UidComparator());
-				//TODO:ラムダ式で書くと...
-//				_animatedImgList.sort((p1, p2) -> Long.compare(p1._uid, p2._uid));
+				_animatedImgList.sort((p1, p2) -> Long.compare(p1._uid, p2._uid));
 				// 古い順に削除
 				_animatedImgList.subList(0, _animatedImgList.size() -_maxImageCount).clear();
 			}
 
 			// アニメーション描画処理
-			for (int i = 0; i < _animatedImgList.size(); i++) {
-				_animatedImgList.get(i).draw();
-				_animatedImgList.get(i).update();
+			_animatedImgList.forEach(a -> a.draw());
+
+			if (_recording) {
+				// フレームを保存する
+				saveFrame("ffmpeg/tga/######.tga");
+				noStroke();
+				fill(200, 0, 0);
+				ellipse(15, 15, 20, 20);
 			}
-			//TODO:ラムダ式で書くと...
-//			_animatedImgList.forEach(a -> {
-//				a.update();
-//				a.draw();
-//			});
 
 		} catch (Exception e) {
 			_logger.error("***** System Error!! *****", e);
@@ -225,6 +218,13 @@ public class MainSketch3D extends PApplet {
 		switch (key) {
 		case ENTER:
 		case RETURN:
+			if (!_recording) {
+				// フレーム保存開始
+				_recording = true;
+			} else {
+				// フレーム保存停止
+				_recording = false;
+			}
 			break;
 		case BACKSPACE:
 			break;
@@ -298,6 +298,8 @@ public class MainSketch3D extends PApplet {
 		_maxImageCount = Integer.parseInt(_properties.getProperty("max_image_count"));
 		// アニメーション画像の初期幅
 		_defaultImageWidth = Integer.parseInt(_properties.getProperty("default_image_width"));
+		// デフォルトアニメーション速度
+		_animationSpeed = Integer.parseInt(_properties.getProperty("default_animation_speed"));
 
 		_logger.info("--- System Settings ---------------------------------------");
 		_logger.info("full_screen             : " + _properties.getProperty("background_mode"));
@@ -308,8 +310,9 @@ public class MainSketch3D extends PApplet {
 		_logger.info("background_mode         : " + _properties.getProperty("background_mode"));
 		_logger.info("file_background_image   : " + _properties.getProperty("file_background_image"));
 		_logger.info("file_background_movie   : " + _properties.getProperty("file_background_movie"));
-		_logger.info("default_image_width     : " + _properties.getProperty("default_image_width"));
 		_logger.info("max_image_count         : " + _properties.getProperty("max_image_count"));
+		_logger.info("default_image_width     : " + _properties.getProperty("default_image_width"));
+		_logger.info("default_animation_speed : " + _properties.getProperty("default_animation_speed"));
 		_logger.info("-----------------------------------------------------------");
 
 		File chk;
@@ -345,10 +348,10 @@ public class MainSketch3D extends PApplet {
 		private PVector _des;				// 目標座標
 		private float _easing = 0.01f;	// 近づく速度
 
-		private float _moveAngle = 0;		// ヒラヒラ角度
-		private int _moveDir = 1;			// ヒラヒラ向き
-		private float _maxAngle = 0;		// ヒラヒラ最大角度
-		private float _incAngle = 0;		// ヒラヒラ増加角度
+		private float _shakeAngle = 0;	// 後部振り角度
+		private int _shakeDir = 1;			// 後部振り向き
+		private float _maxAngle = 0;		// 後部振り最大角度
+		private float _incAngle = 0;		// 後部振り増加角度
 
 
 		public Animation(File file) {
@@ -373,9 +376,10 @@ public class MainSketch3D extends PApplet {
 			// 初期設定
 			_pos = new PVector(random(0, width), random(0, height), 0);
 			_des = new PVector(random(-100, width + 100), random(-100, height + 100), random(-900, 600));
-			_easing = random(0.01f, 0.03f);
-			_maxAngle = (0.04f - _easing) * 500;
-			_incAngle = ceil(random(0, 4));
+			_easing = random(_animationSpeed * 0.001f, _animationSpeed * 0.02f);
+			_maxAngle = ceil(random(10, 20));
+			_incAngle = ceil(random(1, 3));
+
 
 		}
 
@@ -386,28 +390,21 @@ public class MainSketch3D extends PApplet {
 			_pos.z += _easing * (_des.z - _pos.z);
 
 			// 目標座標に近づいたら目標座標を変更
-			float d = dist(_pos.x, _pos.y, _pos.z, _des.x, _des.y, _des.z);
-			if (d < 20) {
-				//  一定の距離以上となるまで設定を続ける
-//				do {
-//					_des.x = random(-100, width + 100);
-//					_des.y = random(-100, height + 100);
-//					_des.z = random(-900, 600);
-//				} while (dist(_pos.x, _pos.y, _pos.z, _des.x, _des.y, _des.z) < 200);
+			float distance = dist(_pos.x, _pos.y, _pos.z, _des.x, _des.y, _des.z);
+			if (distance < 20) {
 				_des.x = random(-100, width + 100);
 				_des.y = random(-100, height + 100);
 				_des.z = random(-900, 600);
 
-				_easing = random(0.01f, 0.03f);
-				_maxAngle = (0.04f - _easing) * 500;
-				_incAngle = ceil(random(0, 4));
+				_easing = random(_animationSpeed * 0.001f, _animationSpeed * 0.02f);
+				_maxAngle = ceil(random(10, 20));
+				_incAngle = ceil(random(1, 3));
 			}
 
-			if (_moveAngle > _maxAngle || _moveAngle < -_maxAngle) {
-				_moveDir *= -1;
+			if (_shakeAngle > _maxAngle || _shakeAngle < -_maxAngle) {
+				_shakeDir *= -1;
 			}
-			_moveAngle += _incAngle * _moveDir;
-
+			_shakeAngle += _incAngle * _shakeDir;
 		}
 
 		public void draw() {
@@ -433,13 +430,15 @@ public class MainSketch3D extends PApplet {
 			pushMatrix();
 			translate(_imgF.width, 0, 0);
 			// 後部だけヒラヒラさせる
-			rotateY(radians(_moveAngle));
+			rotateY(radians(_shakeAngle));
 			// 後部の描画
 			image(_imgR, 0, 0);
 			popMatrix();
 
 			popMatrix();
 
+			// 座標更新
+			update();
 		}
 
 		public long getUid() {
@@ -490,20 +489,20 @@ public class MainSketch3D extends PApplet {
 			_easing = easing;
 		}
 
-		public float getMoveAngle() {
-			return _moveAngle;
+		public float getShakeAngle() {
+			return _shakeAngle;
 		}
 
-		public void setMoveAngle(float moveAngle) {
-			_moveAngle = moveAngle;
+		public void setShakeAngle(float shakeAngle) {
+			_shakeAngle = shakeAngle;
 		}
 
-		public int getMoveDir() {
-			return _moveDir;
+		public int getShakeDir() {
+			return _shakeDir;
 		}
 
-		public void setMoveDir(int moveDir) {
-			_moveDir = moveDir;
+		public void setShakeDir(int shakeDir) {
+			_shakeDir = shakeDir;
 		}
 
 		public float getMaxAngle() {
@@ -522,17 +521,6 @@ public class MainSketch3D extends PApplet {
 			_incAngle = incAngle;
 		}
 
-	}
-
-	/**
-	 * ユニークIDによるソート用比較クラス
-	 */
-	public class UidComparator implements Comparator<Animation> {
-		@Override
-		public int compare(Animation p1, Animation p2) {
-			return Long.compare(p1._uid, p2._uid);
-
-		}
 	}
 
 }

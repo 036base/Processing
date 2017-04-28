@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.FileFilterUtils;
@@ -23,6 +24,7 @@ import org.apache.logging.log4j.Logger;
 
 import processing.core.PApplet;
 import processing.core.PImage;
+import processing.core.PVector;
 import processing.video.Movie;
 
 /**
@@ -45,8 +47,9 @@ public class MainSketch extends PApplet {
 	private int _animationSpeed;		// デフォルトアニメーション速度
 	private float _maxImageScale;		// 最大倍率
 	private float _minImageScale;		// 最小倍率
-
 	private  List<Animation> _animatedImgList;
+
+	private boolean _recording = false;
 
 
 	public static void main(String[] args) {
@@ -134,16 +137,7 @@ public class MainSketch extends PApplet {
 			// アニメーション画像フォルダから拡張子が「.png」のファイルを取得
 			final List<File> fileList = (List<File>) FileUtils.listFiles(new File(_properties.getProperty("dir_animated_image")), FileFilterUtils.suffixFileFilter(".png"), FileFilterUtils.trueFileFilter());
 			_animatedImgList = Collections.synchronizedList(new ArrayList<Animation>());
-			for (final File file : fileList) {
-				if (file.canRead()) {
-					// アニメーション画像クラスを作成・初期化してリストに追加
-					_animatedImgList.add(new Animation(file));
-				} else {
-					_logger.warn("Could not read image file " + file.getName());
-				}
-			}
-			//TODO:ラムダ式で書くと...
-//			_animatedImgList = fileList.stream().map(file -> new Animation(file)).collect(Collectors.toList());
+			_animatedImgList = fileList.stream().map(file -> new Animation(file)).collect(Collectors.toList());
 
 		} catch (Exception e) {
 			_logger.error("*** System Error!! ***", e);
@@ -170,29 +164,26 @@ public class MainSketch extends PApplet {
 
 			if (_animatedImgList.size() > _maxImageCount) {
 				// UIDの昇順でソート
-				Collections.sort(_animatedImgList, new UidComparator());
-				//TODO:ラムダ式で書くと...
-//				_animatedImgList.sort((p1, p2) -> Long.compare(p1._uid, p2._uid));
+				_animatedImgList.sort((p1, p2) -> Long.compare(p1._uid, p2._uid));
 				// 古い順に削除
 				_animatedImgList.subList(0, _animatedImgList.size() -_maxImageCount).clear();
 			}
 
 			// 倍率の昇順でソート（大きいものが手前にくるように）
-			Collections.sort(_animatedImgList, new ScaleComparator());
+			_animatedImgList.sort((p1, p2) -> Float.compare(p1._scale, p2._scale));
 
-			// アニメーション描画処理
-			for (int i = 0; i < _animatedImgList.size(); i++) {
-				_animatedImgList.get(i).update();
-				_animatedImgList.get(i).draw();
-			}
-			//TODO:ラムダ式で書くと...
 			// 倍率の昇順でソートして描画
-//			_animatedImgList.stream()
-//					.sorted(Comparator.comparing(Animation::getScale))
-//					.forEach(a -> {
-//						a.update();
-//						a.draw();
-//					});
+			_animatedImgList.stream()
+					.sorted(Comparator.comparing(Animation::getScale))
+					.forEach(a -> a.draw());
+
+			if (_recording) {
+				// フレームを保存する
+				saveFrame("ffmpeg/tga/######.tga");
+				noStroke();
+				fill(200, 0, 0);
+				ellipse(15, 15, 20, 20);
+			}
 
 		} catch (Exception e) {
 			_logger.error("***** System Error!! *****", e);
@@ -226,6 +217,13 @@ public class MainSketch extends PApplet {
 		switch (key) {
 		case ENTER:
 		case RETURN:
+			if (!_recording) {
+				// フレーム保存開始
+				_recording = true;
+			} else {
+				// フレーム保存停止
+				_recording = false;
+			}
 			break;
 		case BACKSPACE:
 			break;
@@ -315,11 +313,11 @@ public class MainSketch extends PApplet {
 		_logger.info("background_mode         : " + _properties.getProperty("background_mode"));
 		_logger.info("file_background_image   : " + _properties.getProperty("file_background_image"));
 		_logger.info("file_background_movie   : " + _properties.getProperty("file_background_movie"));
-		_logger.info("default_image_width     : " + _properties.getProperty("default_image_width"));
 		_logger.info("max_image_count         : " + _properties.getProperty("max_image_count"));
+		_logger.info("default_image_width     : " + _properties.getProperty("default_image_width"));
+		_logger.info("default_animation_speed : " + _properties.getProperty("default_animation_speed"));
 		_logger.info("max_image_scale         : " + _properties.getProperty("max_image_scale"));
 		_logger.info("min_image_scale         : " + _properties.getProperty("min_image_scale"));
-		_logger.info("default_animation_speed : " + _properties.getProperty("default_animation_speed"));
 		_logger.info("-----------------------------------------------------------");
 
 		File chk;
@@ -350,10 +348,8 @@ public class MainSketch extends PApplet {
 	public class Animation {
 		private long _uid;				// ユニークID
 		private PImage _img;			// アニメーションイメージ
-		private int _x = 0;			// X座標
-		private int _y = 0;			// Y座標
-		private int _dirX = 1;			// X軸進行方向
-		private int _dirY = 1;			// Y軸進行方向
+		private PVector _pos;			// 座標
+		private PVector _dir;			// 進行方向
 		private int _speed = 1;		// 速度
 		private float _scale = 1.0f;	// 倍率
 
@@ -373,17 +369,15 @@ public class MainSketch extends PApplet {
 			_img.resize(_defaultImageWidth, 0);
 
 			// 初期座標を設定
-			_x = (int) random(_img.width, width - _img.width);
-			_y = (int) random(_img.height, height - _img.height);
+			_pos = new PVector(random(_img.width, width - _img.width), random(_img.height, height - _img.height));
 
 			// 進行方向を設定
-			_dirX = 1;
-			_dirY = 1;
+			_dir = new PVector(1, 1);
 			if (random(2) > 1) {
-				_dirX *= -1;
+				_dir.x *= -1;
 			}
 			if (random(2) > 1) {
-				_dirY *= -1;
+				_dir.y *= -1;
 			}
 
 			// アニメーション速度
@@ -403,31 +397,31 @@ public class MainSketch extends PApplet {
 				_speed = _animationSpeed;
 			}
 
-			if (((_x + _dirX * _speed) < 0) || ((_x + _dirX * _speed) > width - _img.width)) {
+			if (((_pos.x + _dir.x * _speed) < 0) || ((_pos.x + _dir.x * _speed) > width - _img.width)) {
 				// X軸進行方向を逆転
-				_dirX = -_dirX;
+				_dir.x = -_dir.x;
 			} else {
 				// ランダムに方向転換
 				if (rand >= 1 && rand <= 5) {
 					// X軸進行方向を逆転
-					_dirX = -_dirX;
+					_dir.x = -_dir.x;
 				}
 			}
 
-			if (((_y + _dirY * _speed) < 0) || ((_y + _dirY * _speed) > height - _img.height)) {
+			if (((_pos.y + _dir.y * _speed) < 0) || ((_pos.y + _dir.y * _speed) > height - _img.height)) {
 				// Y軸進行方向を逆転
-				_dirY = -_dirY;
+				_dir.y = -_dir.y;
 			} else {
 				// ランダムに方向転換
 				if (rand >= 11 && rand <= 15) {
 					// Y軸進行方向を逆転
-					_dirY = -_dirY;
+					_dir.y = -_dir.y;
 				}
 			}
 
-			_x += _dirX * _speed;
-			_y += _dirY * _speed;
-
+			// 座標を更新
+			_pos.x += _dir.x * _speed;
+			_pos.y += _dir.y * _speed;
 		}
 
 		public void draw() {
@@ -435,12 +429,12 @@ public class MainSketch extends PApplet {
 			pushMatrix();
 
 			// 画像中央を回転の中心にする
-			translate(_x + _img.width / 2, _y + _img.height / 2);
+			translate(_pos.x + _img.width / 2, _pos.y + _img.height / 2);
 			// 進行方向に画像が向くように回転する
-			float deg = 45 * _dirX * _dirY;
+			float deg = 45 * _dir.x * _dir.y;
 			rotate(radians(deg));
 
-			if (_dirX > 0) {
+			if (_dir.x > 0) {
 				// 左右反転（※基本画像は左向き）
 				scale(-1, 1);
 			}
@@ -451,7 +445,7 @@ public class MainSketch extends PApplet {
 			imageMode(CENTER);
 
 			// 拡大縮小
-			_scale += (0.01f * _dirX * _dirY);
+			_scale += (0.01f * _dir.x * _dir.y);
 			if (_scale > _maxImageScale) {
 				_scale = _maxImageScale;
 			}
@@ -468,64 +462,11 @@ public class MainSketch extends PApplet {
 
 			popMatrix();
 
+			// 座標更新
+			update();
 		}
 
-		public long getUid() {
-			return _uid;
-		}
-
-		public void setUid(long uid) {
-			_uid = uid;
-		}
-
-		public PImage getImg() {
-			return _img;
-		}
-
-		public void setImg(PImage img) {
-			_img = img;
-		}
-
-		public int getX() {
-			return _x;
-		}
-
-		public void setX(int x) {
-			_x = x;
-		}
-
-		public int getY() {
-			return _y;
-		}
-
-		public void setY(int y) {
-			_y = y;
-		}
-
-		public int getDirX() {
-			return _dirX;
-		}
-
-		public void setDirX(int dirX) {
-			_dirX = dirX;
-		}
-
-		public int getDirY() {
-			return _dirY;
-		}
-
-		public void setDirY(int dirY) {
-			_dirY = dirY;
-		}
-
-		public int getSpeed() {
-			return _speed;
-		}
-
-		public void setSpeed(int speed) {
-			_speed = speed;
-		}
-
+		/* ----- getter / setter -----*/
 		public float getScale() {
 			return _scale;
 		}
@@ -534,28 +475,6 @@ public class MainSketch extends PApplet {
 			_scale = scale;
 		}
 
-	}
-
-	/**
-	 * ユニークIDによるソート用比較クラス
-	 */
-	public class UidComparator implements Comparator<Animation> {
-		@Override
-		public int compare(Animation p1, Animation p2) {
-			return Long.compare(p1._uid, p2._uid);
-
-		}
-	}
-
-	/**
-	 * 倍率によるソート用比較クラス
-	 */
-	public class ScaleComparator implements Comparator<Animation> {
-		@Override
-		public int compare(Animation p1, Animation p2) {
-			return Float.compare(p1._scale, p2._scale);
-
-		}
 	}
 
 }
