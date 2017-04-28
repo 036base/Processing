@@ -169,9 +169,6 @@ public class MainSketch extends PApplet {
 				_animatedImgList.subList(0, _animatedImgList.size() -_maxImageCount).clear();
 			}
 
-			// 倍率の昇順でソート（大きいものが手前にくるように）
-			_animatedImgList.sort((p1, p2) -> Float.compare(p1._scale, p2._scale));
-
 			// 倍率の昇順でソートして描画
 			_animatedImgList.stream()
 					.sorted(Comparator.comparing(Animation::getScale))
