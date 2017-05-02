@@ -353,9 +353,12 @@ public class MainSketch3D2 extends PApplet {
 		private float _maxAngle = 0;		// 後部振り最大角度
 		private float _incAngle = 0;		// 後部振り増加角度
 
+		// 周回情報
 		private PVector _point;			// 位置
+		private int _pointDir;				// 向き
 		private float _theta;				// 角度
 		private float _radius;			// 半径
+		private float _radiusDir;			// 半径増減
 
 		private float _tempCosTheta;
 
@@ -381,13 +384,13 @@ public class MainSketch3D2 extends PApplet {
 			// 初期設定
 			_pos = new PVector(random(pimg.width, width - pimg.width), random(pimg.height, height - pimg.height), random(-900, 100));
 			_dir = new PVector(1, 1, 1);
-			if (random(2) > 1) {
+			if (ceil(random(2)) == 1) {
 				_dir.x = -1;
 			}
-			if (random(2) > 1) {
+			if (ceil(random(2)) == 1) {
 				_dir.y = -1;
 			}
-			if (random(2) > 1) {
+			if (ceil(random(2)) == 1) {
 				_dir.z = -1;
 			}
 			_speed = _animationSpeed;
@@ -396,8 +399,13 @@ public class MainSketch3D2 extends PApplet {
 			_incAngle = ceil(random(1, 3));
 
 			_point = new PVector(0, 0, 0);
-			_theta = 0;
+			_theta = ceil(random(1, 180) / 5);
 			_radius = ceil(random(0, 5)) * 100;
+			_radiusDir = 1;
+			_pointDir = 1;
+			if (ceil(random(2)) == 1) {
+				_pointDir = -1;
+			}
 
 		}
 
@@ -417,21 +425,21 @@ public class MainSketch3D2 extends PApplet {
 //				// X軸進行方向を逆転
 //				_dir.x = -_dir.x;
 //			}
-//
-//			if (((_pos.y + _dir.y * _speed) < 0) || ((_pos.y + _dir.y * _speed) > height - (_imgF.height + _imgR.height))) {
-//				// Y軸進行方向を逆転
-//				_dir.y = -_dir.y;
-//			}
-//
-//			if (((_pos.z + _dir.z * _speed) < -900) || ((_pos.z + _dir.z * _speed) > 0)) {
-//				// Z軸進行方向を逆転
-//				_dir.z = -_dir.z;
-//			}
-//
-//			// 座標を更新
+
+			if (((_pos.y + _dir.y * _speed) < 0) || ((_pos.y + _dir.y * _speed) > height - (_imgF.height + _imgR.height))) {
+				// Y軸進行方向を逆転
+				_dir.y = -_dir.y;
+			}
+
+			if (((_pos.z + _dir.z * _speed) < -900) || ((_pos.z + _dir.z * _speed) > 0)) {
+				// Z軸進行方向を逆転
+				_dir.z = -_dir.z;
+			}
+
+			// 座標を更新
 //			_pos.x += _dir.x * _speed;
-//			_pos.y += _dir.y * _speed;
-//			_pos.z += _dir.z * _speed;
+			_pos.y += _dir.y * _speed;
+			_pos.z += _dir.z * _speed;
 
 			// 後部振り角度を更新
 			if (_shakeAngle > _maxAngle || _shakeAngle < -_maxAngle) {
@@ -440,17 +448,20 @@ public class MainSketch3D2 extends PApplet {
 			_shakeAngle += _incAngle * _shakeDir;
 
 			// 回転角度を更新
-			_theta += 0.02 * _speed;
+			_theta += 0.02 * _pointDir * _speed;
 			_point.x = _radius * cos(_theta);
 			_point.z = _radius * sin(_theta);
 
-			//TODO:切り替わりがスムーズになれば。。。
 			// １周ごとに半径を変更
 			if (cos(_theta) > 0 && _tempCosTheta < 0) {
-				_radius = ceil(random(0, 5)) * 100;
-				System.out.println(_radius);
+				// TODO:徐々に増減するしかないかな...
+				_radius += 5 * _radiusDir;
 			}
 			_tempCosTheta = cos(_theta);
+			if (_radius > 500 || _radius < 100) {
+				_radiusDir = -_radiusDir;
+			}
+			//TODO:逆回転への切り替えもできればいいけど...
 
 		}
 
@@ -461,12 +472,13 @@ public class MainSketch3D2 extends PApplet {
 
 			pushMatrix();
 
-			translate(_point.x + _pos.x, _pos.y, _point.z + _pos.z);
+			translate(_pos.x + _point.x, _pos.y, _pos.z + _point.z);
 			rotateY(-_theta);
-			rotateY(90);
-//			if (_radiusDir < 0) {
-//				rotateY(180);
-//			}
+			if (_pointDir > 0) {
+				rotateY(90);
+			} else {
+				rotateY(-90);
+			}
 
 			// 前部の描画
 			image(_imgF, 0, 0);
