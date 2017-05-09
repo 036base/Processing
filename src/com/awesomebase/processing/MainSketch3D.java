@@ -344,15 +344,23 @@ public class MainSketch3D extends PApplet {
 		private long _uid;					// ユニークID
 		private PImage _imgF;				// イメージ前部
 		private PImage _imgR;				// イメージ後部
-		private PVector _pos;				// 現在座標
-		private PVector _des;				// 目標座標
-		private float _easing = 0.01f;	// 近づく速度
+		private PVector _pos;				// 座標
+		private PVector _dir;				// 進行方向
+		private int _speed = 1;			// 速度
 
 		private float _shakeAngle = 0;	// 後部振り角度
 		private int _shakeDir = 1;			// 後部振り向き
 		private float _maxAngle = 0;		// 後部振り最大角度
 		private float _incAngle = 0;		// 後部振り増加角度
 
+		// 周回情報
+		private PVector _point;			// 位置
+		private int _pointDir;				// 向き
+		private float _theta;				// 角度
+		private float _radius;			// 半径
+		private float _radiusDir;			// 半径増減
+
+		private float _tempCosTheta;
 
 		public Animation(File file) {
 			_logger.info("Create image " + file.getName());
@@ -374,57 +382,116 @@ public class MainSketch3D extends PApplet {
 			_imgR = pimg.get(ceil(pimg.width / 2), 0, pimg.width, pimg.height);
 
 			// 初期設定
-			_pos = new PVector(random(0, width), random(0, height), 0);
-			_des = new PVector(random(-100, width + 100), random(-100, height + 100), random(-900, 600));
-			_easing = random(_animationSpeed * 0.001f, _animationSpeed * 0.02f);
-			_maxAngle = ceil(random(10, 20));
+			_pos = new PVector(random(pimg.width, width - pimg.width), random(pimg.height, height - pimg.height), random(-1000, 100));
+			_dir = new PVector(1, 1, 1);
+			if (ceil(random(2)) == 1) {
+				_dir.x = -1;
+			}
+			if (ceil(random(2)) == 1) {
+				_dir.y = -1;
+			}
+			if (ceil(random(2)) == 1) {
+				_dir.z = -1;
+			}
+			_speed = _animationSpeed;
+
+			_maxAngle = ceil(random(10, 30));
 			_incAngle = ceil(random(1, 3));
 
+			_point = new PVector(0, 0, 0);
+			_theta = ceil(random(1, 180) / 5);
+			_radius = ceil(random(0, 5)) * 100;
+			_radiusDir = 1;
+			_pointDir = 1;
+			if (ceil(random(2)) == 1) {
+				_pointDir = -1;
+			}
 
 		}
 
 		public void update() {
 
-			_pos.x += _easing * (_des.x - _pos.x);
-			_pos.y += _easing * (_des.y - _pos.y);
-			_pos.z += _easing * (_des.z - _pos.z);
+			int rand = ceil(random(0, 1000));
 
-			// 目標座標に近づいたら目標座標を変更
-			float distance = dist(_pos.x, _pos.y, _pos.z, _des.x, _des.y, _des.z);
-			if (distance < 20) {
-				_des.x = random(-100, width + 100);
-				_des.y = random(-100, height + 100);
-				_des.z = random(-900, 600);
-
-				_easing = random(_animationSpeed * 0.001f, _animationSpeed * 0.02f);
-				_maxAngle = ceil(random(10, 20));
-				_incAngle = ceil(random(1, 3));
+			if (rand <= 50) {
+				// 速度をアップ
+				_speed = _animationSpeed + ceil(rand / 100);
+			} else if (rand >= 950) {
+				// 速度を戻す
+				_speed = _animationSpeed;
 			}
 
+//			if ((_pos.x + _dir.x * _speed) < 0 || (_pos.x + _dir.x * _speed) > width) {
+//				// X軸進行方向を逆転
+//				_dir.x = -_dir.x;
+//			}
+
+			if ((_pos.y + _dir.y * _speed < 0) || (_pos.y + _dir.y * _speed) > height) {
+				// Y軸進行方向を逆転
+				_dir.y = -_dir.y;
+			}
+
+			if ((_pos.z + _dir.z * _speed) < -1000 || (_pos.z + _dir.z * _speed) > 100) {
+				// Z軸進行方向を逆転
+				_dir.z = -_dir.z;
+			}
+
+			// 座標を更新
+//			_pos.x += _dir.x * _speed;
+			_pos.y += _dir.y * _speed;
+			_pos.z += _dir.z * _speed;
+
+			// 後部振り角度を更新
 			if (_shakeAngle > _maxAngle || _shakeAngle < -_maxAngle) {
 				_shakeDir *= -1;
 			}
 			_shakeAngle += _incAngle * _shakeDir;
+
+			// 回転角度を更新
+			_theta += 0.02 * _pointDir * _speed;
+			_point.x = _radius * cos(_theta);
+			_point.z = _radius * sin(_theta);
+
+			// １周ごとに半径を変更
+			if (cos(_theta) > 0 && _tempCosTheta < 0) {
+				_radius += 5 * _radiusDir;
+				if (rand % 3 == 0) {
+					// 逆回転
+					_pointDir = -_pointDir;
+				}
+				if (rand % 150 == 0) {
+					// 後部振り設定
+					_maxAngle = ceil(random(10, 30));
+					_incAngle = ceil(random(1, 3));
+					_shakeAngle = 0;
+				}
+			}
+			_tempCosTheta = cos(_theta);
+
+			if (_radius > 500 || _radius < 100) {
+				_radiusDir = -_radiusDir;
+			} else if (rand % 20 == 0) {
+				_radiusDir = -_radiusDir;
+			}
+
 		}
 
 		public void draw() {
 
+			// 座標更新
+			update();
+
 			// zバッファの無効化
 			hint(DISABLE_DEPTH_TEST);
 			pushMatrix();
-			translate(_pos.x, _pos.y, _pos.z);
 
-			// X軸とZ軸進行方向を向く
-			float angleY = atan2(_des.x - _pos.x, _des.z - _pos.z);
-			rotateY(radians(90));
-			rotateY(angleY);
-
-			// Y軸進行方向を向く
-			float angleZ = atan2(_des.y - _pos.y, _des.x - _pos.x);
-			if (_pos.x > _des.x) {
-				angleZ = atan2(_des.y - _pos.y, _pos.x - _des.x);
+			translate(_pos.x + _point.x, _pos.y, _pos.z + _point.z);
+			rotateY(-_theta);
+			if (_pointDir > 0) {
+				rotateY(90);
+			} else {
+				rotateY(-90);
 			}
-			rotate(-angleZ);
 
 			// 前部の描画
 			image(_imgF, 0, 0);
@@ -441,8 +508,6 @@ public class MainSketch3D extends PApplet {
 			// zバッファの有効化
 			hint(ENABLE_DEPTH_TEST);
 
-			// 座標更新
-			update();
 		}
 
 	}
