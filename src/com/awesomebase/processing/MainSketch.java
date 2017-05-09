@@ -87,11 +87,11 @@ public class MainSketch extends PApplet {
 			if ("1".equals(_properties.getProperty("full_screen"))) {
 				// フルスクリーンモードで表示
 				int display = Integer.parseInt(_properties.getProperty("display_no"));
-				fullScreen(P2D, display);
+				fullScreen(P3D, display);
 			} else {
 				// デフォルト画面サイズで表示
 				String[] scrennSize = _properties.getProperty("screen_size").split(",");
-				size(Integer.parseInt(scrennSize[0]), Integer.parseInt(scrennSize[1]), P2D);
+				size(Integer.parseInt(scrennSize[0]), Integer.parseInt(scrennSize[1]), P3D);
 			}
 
 			// アンチエイリアス無効
@@ -113,6 +113,7 @@ public class MainSketch extends PApplet {
 	public void setup() {
 		try {
 			_logger.info("Setup...");
+//			hint(ENABLE_DEPTH_SORT);
 
 			// 画面のタイトル、リサイズ許可設定
 			surface.setTitle("");
@@ -151,6 +152,8 @@ public class MainSketch extends PApplet {
 	@Override
 	public void draw() {
 		try {
+			// zバッファの無効化
+			hint(DISABLE_DEPTH_TEST);
 			if ("0".equals(_backgroundMode)) {
 				// 背景画像を描画
 				image(_backgroundImg, 0, 0, width, height);
@@ -161,6 +164,8 @@ public class MainSketch extends PApplet {
 				// 背景なし
 				background(0);
 			}
+			// zバッファの有効化
+			hint(ENABLE_DEPTH_TEST);
 
 			if (_animatedImgList.size() > _maxImageCount) {
 				// UIDの昇順でソート
@@ -343,12 +348,19 @@ public class MainSketch extends PApplet {
 	 * アニメーション画像クラス
 	 */
 	public class Animation {
-		private long _uid;				// ユニークID
-		private PImage _img;			// アニメーションイメージ
-		private PVector _pos;			// 座標
-		private PVector _dir;			// 進行方向
-		private int _speed = 1;		// 速度
-		private float _scale = 1.0f;	// 倍率
+		private long _uid;					// ユニークID
+//		private PImage _img;				// アニメーションイメージ
+		private PImage _imgF;				// イメージ前部
+		private PImage _imgR;				// イメージ後部
+		private PVector _pos;				// 座標
+		private PVector _dir;				// 進行方向
+		private int _speed = 1;			// 速度
+		private float _scale = 1.0f;		// 倍率
+
+		private float _shakeAngle = 0;	// 後部振り角度
+		private int _shakeDir = 1;			// 後部振り向き
+		private float _maxAngle = 0;		// 後部振り最大角度
+		private float _incAngle = 0;		// 後部振り増加角度
 
 		public Animation(File file) {
 			_logger.info("Create image " + file.getName());
@@ -361,12 +373,16 @@ public class MainSketch extends PApplet {
 			BufferedImage bimg = ImageUtil.Transparency(file);
 
 			// PImage生成
-			_img = new PImage(bimg);
+			PImage pimg = new PImage(bimg);
 			// デフォルトサイズに調整
-			_img.resize(_defaultImageWidth, 0);
+			pimg.resize(_defaultImageWidth, 0);
+
+			// 画像を前後に分ける
+			_imgF = pimg.get(0, 0, floor(pimg.width / 2), pimg.height);
+			_imgR = pimg.get(ceil(pimg.width / 2), 0, pimg.width, pimg.height);
 
 			// 初期座標を設定
-			_pos = new PVector(random(_img.width, width - _img.width), random(_img.height, height - _img.height));
+			_pos = new PVector(random(pimg.width * 2, width - (pimg.width * 2)), random(pimg.height * 2, height - (pimg.height * 2)));
 
 			// 進行方向を設定
 			_dir = new PVector(1, 1);
@@ -380,6 +396,9 @@ public class MainSketch extends PApplet {
 			// アニメーション速度
 			_speed = _animationSpeed;
 
+			_maxAngle = 25;
+			_incAngle = 2;
+
 		}
 
 		public void update() {
@@ -389,12 +408,14 @@ public class MainSketch extends PApplet {
 			if (rand <= 50) {
 				// 速度をアップ
 				_speed = _animationSpeed + ceil(rand / 100);
+				_incAngle = 2 + ceil(rand / 100);
 			} else if (rand >= 950) {
 				// 速度を戻す
 				_speed = _animationSpeed;
+				_incAngle = 2;
 			}
 
-			if (((_pos.x + _dir.x * _speed) < 0) || ((_pos.x + _dir.x * _speed) > width - _img.width)) {
+			if (((_pos.x + _dir.x * _speed) < 0) || ((_pos.x + _dir.x * _speed) > width - (_imgF.width + _imgR.width))) {
 				// X軸進行方向を逆転
 				_dir.x = -_dir.x;
 			} else {
@@ -405,7 +426,7 @@ public class MainSketch extends PApplet {
 				}
 			}
 
-			if (((_pos.y + _dir.y * _speed) < 0) || ((_pos.y + _dir.y * _speed) > height - _img.height)) {
+			if (((_pos.y + _dir.y * _speed) < 0) || ((_pos.y + _dir.y * _speed) > height - _imgF.height)) {
 				// Y軸進行方向を逆転
 				_dir.y = -_dir.y;
 			} else {
@@ -419,14 +440,22 @@ public class MainSketch extends PApplet {
 			// 座標を更新
 			_pos.x += _dir.x * _speed;
 			_pos.y += _dir.y * _speed;
+
+			if (_shakeAngle > _maxAngle || _shakeAngle < -_maxAngle) {
+				_shakeDir *= -1;
+			}
+			_shakeAngle += _incAngle * _shakeDir;
+
 		}
 
 		public void draw() {
 
+			// zバッファの無効化
+			hint(DISABLE_DEPTH_TEST);
 			pushMatrix();
 
 			// 画像中央を回転の中心にする
-			translate(_pos.x + _img.width / 2, _pos.y + _img.height / 2);
+			translate(_pos.x + _imgF.width, _pos.y + _imgF.height / 2);
 			// 進行方向に画像が向くように回転する
 			float deg = 45 * _dir.x * _dir.y;
 			rotate(radians(deg));
@@ -451,13 +480,25 @@ public class MainSketch extends PApplet {
 			}
 			scale(_scale);
 
-			// 画像を描画
-			image(_img, 0, 0);
+			// 前部の描画
+			image(_imgF, 0, 0);
+
+
+			pushMatrix();
+			translate(_imgF.width * 0.5f, 0, 0);
+			// 後部だけヒラヒラさせる
+			rotateY(radians(_shakeAngle));
+			translate(_imgF.width, 0, 0);
+			// 後部の描画
+			image(_imgR, 0, 0);
+			popMatrix();
 
 			// 画像描画原点を元（画像の左上隅）に戻す
 			imageMode(CORNER);
 
 			popMatrix();
+			// zバッファの有効化
+			hint(ENABLE_DEPTH_TEST);
 
 			// 座標更新
 			update();
