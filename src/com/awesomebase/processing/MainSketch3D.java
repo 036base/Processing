@@ -409,6 +409,8 @@ public class MainSketch3D extends PApplet {
 
 		public void draw() {
 
+			// zバッファの無効化
+			hint(DISABLE_DEPTH_TEST);
 			pushMatrix();
 			translate(_pos.x, _pos.y, _pos.z);
 
@@ -436,6 +438,8 @@ public class MainSketch3D extends PApplet {
 			popMatrix();
 
 			popMatrix();
+			// zバッファの有効化
+			hint(ENABLE_DEPTH_TEST);
 
 			// 座標更新
 			update();

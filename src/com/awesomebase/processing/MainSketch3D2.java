@@ -382,7 +382,7 @@ public class MainSketch3D2 extends PApplet {
 			_imgR = pimg.get(ceil(pimg.width / 2), 0, pimg.width, pimg.height);
 
 			// 初期設定
-			_pos = new PVector(random(pimg.width, width - pimg.width), random(pimg.height, height - pimg.height), random(-900, 100));
+			_pos = new PVector(random(pimg.width, width - pimg.width), random(pimg.height, height - pimg.height), random(-1000, 100));
 			_dir = new PVector(1, 1, 1);
 			if (ceil(random(2)) == 1) {
 				_dir.x = -1;
@@ -395,7 +395,7 @@ public class MainSketch3D2 extends PApplet {
 			}
 			_speed = _animationSpeed;
 
-			_maxAngle = ceil(random(10, 20));
+			_maxAngle = ceil(random(10, 30));
 			_incAngle = ceil(random(1, 3));
 
 			_point = new PVector(0, 0, 0);
@@ -421,17 +421,17 @@ public class MainSketch3D2 extends PApplet {
 				_speed = _animationSpeed;
 			}
 
-//			if (((_pos.x + _dir.x * _speed) < 0) || ((_pos.x + _dir.x * _speed) > width - (_imgF.width + _imgR.width))) {
+//			if ((_pos.x + _dir.x * _speed) < 0 || (_pos.x + _dir.x * _speed) > width) {
 //				// X軸進行方向を逆転
 //				_dir.x = -_dir.x;
 //			}
 
-			if (((_pos.y + _dir.y * _speed) < 0) || ((_pos.y + _dir.y * _speed) > height - (_imgF.height + _imgR.height))) {
+			if ((_pos.y + _dir.y * _speed < 0) || (_pos.y + _dir.y * _speed) > height) {
 				// Y軸進行方向を逆転
 				_dir.y = -_dir.y;
 			}
 
-			if (((_pos.z + _dir.z * _speed) < -900) || ((_pos.z + _dir.z * _speed) > 0)) {
+			if ((_pos.z + _dir.z * _speed) < -1000 || (_pos.z + _dir.z * _speed) > 100) {
 				// Z軸進行方向を逆転
 				_dir.z = -_dir.z;
 			}
@@ -454,14 +454,25 @@ public class MainSketch3D2 extends PApplet {
 
 			// １周ごとに半径を変更
 			if (cos(_theta) > 0 && _tempCosTheta < 0) {
-				// TODO:徐々に増減するしかないかな...
 				_radius += 5 * _radiusDir;
+				if (rand % 3 == 0) {
+					// 逆回転
+					_pointDir = -_pointDir;
+				}
+				if (rand % 150 == 0) {
+					// 後部振り設定
+					_maxAngle = ceil(random(10, 30));
+					_incAngle = ceil(random(1, 3));
+					_shakeAngle = 0;
+				}
 			}
 			_tempCosTheta = cos(_theta);
+
 			if (_radius > 500 || _radius < 100) {
 				_radiusDir = -_radiusDir;
+			} else if (rand % 20 == 0) {
+				_radiusDir = -_radiusDir;
 			}
-			//TODO:逆回転への切り替えもできればいいけど...
 
 		}
 
@@ -470,6 +481,8 @@ public class MainSketch3D2 extends PApplet {
 			// 座標更新
 			update();
 
+			// zバッファの無効化
+			hint(DISABLE_DEPTH_TEST);
 			pushMatrix();
 
 			translate(_pos.x + _point.x, _pos.y, _pos.z + _point.z);
@@ -492,6 +505,9 @@ public class MainSketch3D2 extends PApplet {
 			popMatrix();
 
 			popMatrix();
+			// zバッファの有効化
+			hint(ENABLE_DEPTH_TEST);
+
 		}
 
 	}
