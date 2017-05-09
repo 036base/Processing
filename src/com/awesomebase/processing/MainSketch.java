@@ -113,7 +113,7 @@ public class MainSketch extends PApplet {
 	public void setup() {
 		try {
 			_logger.info("Setup...");
-//			hint(ENABLE_DEPTH_SORT);
+			hint(ENABLE_DEPTH_SORT);
 
 			// 画面のタイトル、リサイズ許可設定
 			surface.setTitle("");
