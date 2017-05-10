@@ -8,6 +8,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Properties;
 import java.util.stream.Collectors;
@@ -175,8 +176,10 @@ public class MainSketch3D extends PApplet {
 				_animatedImgList.subList(0, _animatedImgList.size() -_maxImageCount).clear();
 			}
 
-			// アニメーション描画処理
-			_animatedImgList.forEach(a -> a.draw());
+			// Z座標位置の昇順でソートして描画
+			_animatedImgList.stream()
+					.sorted(Comparator.comparing(Animation::getPosZ))
+					.forEach(a -> a.draw());
 
 			if (_recording) {
 				// フレームを保存する
@@ -382,7 +385,7 @@ public class MainSketch3D extends PApplet {
 			_imgR = pimg.get(ceil(pimg.width / 2), 0, pimg.width, pimg.height);
 
 			// 初期設定
-			_pos = new PVector(random(pimg.width, width - pimg.width), random(pimg.height, height - pimg.height), random(-1000, 100));
+			_pos = new PVector(random(width * 0.1f, width * 0.9f), random(height * 0.1f, height * 0.9f), random(-1000, 100));
 			_dir = new PVector(1, 1, 1);
 			if (ceil(random(2)) == 1) {
 				_dir.x = -1;
@@ -421,12 +424,12 @@ public class MainSketch3D extends PApplet {
 				_speed = _animationSpeed;
 			}
 
-//			if ((_pos.x + _dir.x * _speed) < 0 || (_pos.x + _dir.x * _speed) > width) {
-//				// X軸進行方向を逆転
-//				_dir.x = -_dir.x;
-//			}
+			if ((_pos.x + _dir.x * _speed) < width * 0.1f || (_pos.x + _dir.x * _speed) > width * 0.9f) {
+				// X軸進行方向を逆転
+				_dir.x = -_dir.x;
+			}
 
-			if ((_pos.y + _dir.y * _speed < 0) || (_pos.y + _dir.y * _speed) > height) {
+			if ((_pos.y + _dir.y * _speed < height * 0.1f) || (_pos.y + _dir.y * _speed) > height * 0.9f) {
 				// Y軸進行方向を逆転
 				_dir.y = -_dir.y;
 			}
@@ -436,10 +439,10 @@ public class MainSketch3D extends PApplet {
 				_dir.z = -_dir.z;
 			}
 
-			// 座標を更新
-//			_pos.x += _dir.x * _speed;
-			_pos.y += _dir.y * _speed;
-			_pos.z += _dir.z * _speed;
+			// 中心点の座標を更新
+			_pos.x += _dir.x * (_speed * 0.2f);
+			_pos.y += _dir.y * (_speed * 0.5f);
+			_pos.z += _dir.z * (_speed * 0.5f);
 
 			// 後部振り角度を更新
 			if (_shakeAngle > _maxAngle || _shakeAngle < -_maxAngle) {
@@ -448,14 +451,16 @@ public class MainSketch3D extends PApplet {
 			_shakeAngle += _incAngle * _shakeDir;
 
 			// 回転角度を更新
-			_theta += 0.02 * _pointDir * _speed;
+			_theta += 0.01 * _speed * _pointDir;
+
+			// 周回点の座標を更新
 			_point.x = _radius * cos(_theta);
 			_point.z = _radius * sin(_theta);
 
 			// １周ごとに半径を変更
 			if (cos(_theta) > 0 && _tempCosTheta < 0) {
 				_radius += 5 * _radiusDir;
-				if (rand % 3 == 0) {
+				if (rand % 10 == 0) {
 					// 逆回転
 					_pointDir = -_pointDir;
 				}
@@ -509,6 +514,12 @@ public class MainSketch3D extends PApplet {
 			hint(ENABLE_DEPTH_TEST);
 
 		}
+
+		/* ----- getter / setter -----*/
+		public float getPosZ() {
+			return _pos.z + _point.z;
+		}
+
 
 	}
 
