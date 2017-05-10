@@ -43,9 +43,10 @@ public class MainSketch3D extends PApplet {
 	private PImage _backgroundImg;		// 背景イメージ
 	private Movie _backgroundMov;		// 背景ムービー
 	private int _maxImageCount;		// 最大表示数
-	private int _defaultImageWidth;	// アニメーション画像の初期幅
-	private int _animationSpeed;		// デフォルトアニメーション速度
-	private  List<Animation> _animatedImgList;
+	private int _defaultImageWidth;	// 画像の初期幅
+	private float _animationSpeed;	// デフォルトアニメーション速度
+
+	private  List<Character> _characterList;
 
 	private boolean _recording = false;
 
@@ -134,12 +135,12 @@ public class MainSketch3D extends PApplet {
 				// 背景なし
 			}
 
-			// アニメーション画像フォルダから拡張子が「.png」のファイルを取得
+			// 画像フォルダから拡張子が「.png」のファイルを取得
 			final List<File> fileList = (List<File>) FileUtils.listFiles(new File(_properties.getProperty("dir_animated_image")), FileFilterUtils.suffixFileFilter(".png"), FileFilterUtils.trueFileFilter());
 
-			// アニメーション画像クラスを作成・初期化してリストに追加
-			_animatedImgList = Collections.synchronizedList(new ArrayList<Animation>());
-			_animatedImgList = fileList.stream().map(file -> new Animation(file)).collect(Collectors.toList());
+			// キャラクタークラスを作成・初期化してリストに追加
+			_characterList = Collections.synchronizedList(new ArrayList<Character>());
+			_characterList = fileList.stream().map(file -> new Character(file)).collect(Collectors.toList());
 
 		} catch (Exception e) {
 			_logger.error("*** System Error!! ***", e);
@@ -169,16 +170,16 @@ public class MainSketch3D extends PApplet {
 			hint(ENABLE_DEPTH_TEST);
 
 
-			if (_animatedImgList.size() > _maxImageCount) {
+			if (_characterList.size() > _maxImageCount) {
 				// UIDの昇順でソート
-				_animatedImgList.sort((p1, p2) -> Long.compare(p1._uid, p2._uid));
+				_characterList.sort((p1, p2) -> Long.compare(p1._uid, p2._uid));
 				// 古い順に削除
-				_animatedImgList.subList(0, _animatedImgList.size() -_maxImageCount).clear();
+				_characterList.subList(0, _characterList.size() -_maxImageCount).clear();
 			}
 
 			// Z座標位置の昇順でソートして描画
-			_animatedImgList.stream()
-					.sorted(Comparator.comparing(Animation::getPosZ))
+			_characterList.stream()
+					.sorted(Comparator.comparing(Character::getPosZ))
 					.forEach(a -> a.draw());
 
 			if (_recording) {
@@ -274,8 +275,8 @@ public class MainSketch3D extends PApplet {
 			@Override
 			public void onFileCreate(File file) {
 				if (file.canRead() && file.getPath().endsWith(".png")) {
-					// アニメーション画像クラスを作成・初期化してリストに追加
-					_animatedImgList.add(new Animation(file));
+					// キャラクタークラスを作成・初期化してリストに追加
+					_characterList.add(new Character(file));
 				} else {
 					_logger.warn("Could not read image file or not 'PNG' file " + file.getName());
 				}
@@ -299,10 +300,10 @@ public class MainSketch3D extends PApplet {
 		_backgroundMode = _properties.getProperty("background_mode");
 		// 最大表示数
 		_maxImageCount = Integer.parseInt(_properties.getProperty("max_image_count"));
-		// アニメーション画像の初期幅
+		// 画像の初期幅
 		_defaultImageWidth = Integer.parseInt(_properties.getProperty("default_image_width"));
 		// デフォルトアニメーション速度
-		_animationSpeed = Integer.parseInt(_properties.getProperty("default_animation_speed"));
+		_animationSpeed = Float.parseFloat(_properties.getProperty("default_animation_speed"));
 
 		_logger.info("--- System Settings ---------------------------------------");
 		_logger.info("full_screen             : " + _properties.getProperty("background_mode"));
@@ -341,15 +342,15 @@ public class MainSketch3D extends PApplet {
 
 
 	/**
-	 * アニメーション画像クラス
+	 * キャラクタークラス
 	 */
-	public class Animation {
+	public class Character {
 		private long _uid;					// ユニークID
 		private PImage _imgF;				// イメージ前部
 		private PImage _imgR;				// イメージ後部
 		private PVector _pos;				// 座標
 		private PVector _dir;				// 進行方向
-		private int _speed = 1;			// 速度
+		private float _speed = 1.0f;		// 速度
 
 		private float _shakeAngle = 0;	// 後部振り角度
 		private int _shakeDir = 1;			// 後部振り向き
@@ -365,7 +366,7 @@ public class MainSketch3D extends PApplet {
 
 		private float _tempCosTheta;
 
-		public Animation(File file) {
+		public Character(File file) {
 			_logger.info("Create image " + file.getName());
 
 			// ユニークID
