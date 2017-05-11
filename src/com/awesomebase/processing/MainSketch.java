@@ -182,7 +182,7 @@ public class MainSketch extends PApplet {
 
 			if (_recording) {
 				// フレームを保存する
-				saveFrame("ffmpeg/tga/######.tga");
+				saveFrame("output/tga/######.tga");
 				noStroke();
 				fill(200, 0, 0);
 				ellipse(15, 15, 20, 20);
