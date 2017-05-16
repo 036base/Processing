@@ -356,6 +356,7 @@ public class MainSketch3D extends PApplet {
 		private int _shakeDir = 1;			// 後部振り向き
 		private float _maxAngle = 0;		// 後部振り最大角度
 		private float _incAngle = 0;		// 後部振り増加角度
+		private boolean _shaking = false;	// 後部振り
 
 		// 周回情報
 		private PVector _point;			// 位置
@@ -386,7 +387,7 @@ public class MainSketch3D extends PApplet {
 			_imgR = pimg.get(ceil(pimg.width / 2), 0, pimg.width, pimg.height);
 
 			// 初期設定
-			_pos = new PVector(random(width * 0.1f, width * 0.9f), random(height * 0.1f, height * 0.9f), random(-1000, 100));
+			_pos = new PVector(random(width * 0.1f, width * 0.9f), random(height * 0.1f, height * 0.9f), random(-500, 100));
 			_dir = new PVector(1, 1, 1);
 			if (ceil(random(2)) == 1) {
 				_dir.x = -1;
@@ -401,6 +402,9 @@ public class MainSketch3D extends PApplet {
 
 			_maxAngle = ceil(random(10, 30));
 			_incAngle = ceil(random(1, 3));
+			if (ceil(random(1, 100)) < 30) {
+				_shaking = true;
+			}
 
 			_point = new PVector(0, 0, 0);
 			_theta = ceil(random(1, 180) / 5);
@@ -435,7 +439,7 @@ public class MainSketch3D extends PApplet {
 				_dir.y = -_dir.y;
 			}
 
-			if ((_pos.z + _dir.z * _speed) < -1000 || (_pos.z + _dir.z * _speed) > 100) {
+			if ((_pos.z + _dir.z * _speed) < -500 || (_pos.z + _dir.z * _speed) > 100) {
 				// Z軸進行方向を逆転
 				_dir.z = -_dir.z;
 			}
@@ -452,7 +456,7 @@ public class MainSketch3D extends PApplet {
 			_shakeAngle += _incAngle * _shakeDir;
 
 			// 回転角度を更新
-			_theta += 0.01 * _speed * _pointDir;
+			_theta += 0.015 * _speed * _pointDir;
 
 			// 周回点の座標を更新
 			_point.x = _radius * cos(_theta);
@@ -471,10 +475,13 @@ public class MainSketch3D extends PApplet {
 					_incAngle = ceil(random(1, 3));
 					_shakeAngle = 0;
 				}
+				if (rand < 200) {
+					_shaking = !_shaking;
+				}
 			}
 			_tempCosTheta = cos(_theta);
 
-			if (_radius > 500 || _radius < 100) {
+			if (_radius > 300 || _radius < 50) {
 				_radiusDir = -_radiusDir;
 			} else if (rand % 20 == 0) {
 				_radiusDir = -_radiusDir;
@@ -504,8 +511,10 @@ public class MainSketch3D extends PApplet {
 
 			pushMatrix();
 			translate(_imgF.width, 0, 0);
-			// 後部だけヒラヒラさせる
-			rotateY(radians(_shakeAngle));
+			if (_shaking) {
+				// 後部だけヒラヒラさせる
+				rotateY(radians(_shakeAngle));
+			}
 			// 後部の描画
 			image(_imgR, 0, 0);
 			popMatrix();
