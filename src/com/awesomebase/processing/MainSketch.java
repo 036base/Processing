@@ -91,8 +91,8 @@ public class MainSketch extends PApplet {
 				fullScreen(P3D, display);
 			} else {
 				// デフォルト画面サイズで表示
-				String[] scrennSize = _properties.getProperty("screen_size").split(",");
-				size(Integer.parseInt(scrennSize[0]), Integer.parseInt(scrennSize[1]), P3D);
+				String[] screenSize = _properties.getProperty("screen_size").split(",");
+				size(Integer.parseInt(screenSize[0]), Integer.parseInt(screenSize[1]), P3D);
 			}
 
 			// アンチエイリアス無効

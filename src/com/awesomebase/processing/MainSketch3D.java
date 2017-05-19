@@ -66,6 +66,20 @@ public class MainSketch3D extends PApplet {
 		}
 	}
 
+	public  void mainSketchStartUp() {
+		try {
+			String className = Thread.currentThread().getStackTrace()[1].getClassName();
+
+			_logger.info("{} start...", className);
+
+			// Processing起動
+			PApplet.main(className);
+
+		} catch (Exception e) {
+			_logger.error("*** System Error!! ***", e);
+		}
+	}
+
 	/**
 	 * Processing設定
 	 */
@@ -83,15 +97,14 @@ public class MainSketch3D extends PApplet {
 			// 初期処理
 			initProc();
 
-
 			if ("1".equals(_properties.getProperty("full_screen"))) {
 				// フルスクリーンモードで表示
 				int display = Integer.parseInt(_properties.getProperty("display_no"));
 				fullScreen(P3D, display);
 			} else {
 				// デフォルト画面サイズで表示
-				String[] scrennSize = _properties.getProperty("screen_size").split(",");
-				size(Integer.parseInt(scrennSize[0]), Integer.parseInt(scrennSize[1]), P3D);
+				String[] screenSize = _properties.getProperty("screen_size").split(",");
+				size(Integer.parseInt(screenSize[0]), Integer.parseInt(screenSize[1]), P3D);
 			}
 
 			// アンチエイリアス無効
@@ -202,6 +215,9 @@ public class MainSketch3D extends PApplet {
 	@Override
 	public void exit() {
 		_logger.info("Exit...");
+		if (surface == null) {
+			surface = initSurface();
+		}
 		super.exit();
 	}
 
