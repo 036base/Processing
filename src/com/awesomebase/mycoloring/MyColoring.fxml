@@ -149,7 +149,7 @@
 						<Font name="Meiryo" size="16.0" />
 					</font>
 				</Label>
-				<Button fx:id="btnMainSketchStart" layoutX="505.0" layoutY="549.0" mnemonicParsing="false" onAction="#onMainSketchStart" prefHeight="40.0" prefWidth="180.0" text="起動" BorderPane.alignment="BOTTOM_RIGHT">
+				<Button fx:id="btnMainSketchStart" layoutX="505.0" layoutY="552.0" mnemonicParsing="false" onAction="#onMainSketchStart" prefHeight="40.0" prefWidth="180.0" styleClass="command-button" text="起動" BorderPane.alignment="BOTTOM_RIGHT">
 					<BorderPane.margin>
 						<Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
 					</BorderPane.margin>
@@ -157,7 +157,7 @@
 						<Font name="Meiryo" size="16.0" />
 					</font>
 				</Button>
-				<Button fx:id="btnExit" layoutX="705.0" layoutY="549.0" mnemonicParsing="false" onAction="#onExit" prefHeight="40.0" prefWidth="180.0" text="終了">
+				<Button fx:id="btnExit" layoutX="705.0" layoutY="552.0" mnemonicParsing="false" onAction="#onExit" prefHeight="40.0" prefWidth="180.0" styleClass="command-button" text="終了">
 					<font>
 						<Font name="Meiryo" size="16.0" />
 					</font>
@@ -217,7 +217,7 @@
                   <Font name="Meiryo" size="14.0" />
                </font>
             </TextField>
-            <TextArea fx:id="txtConsole" layoutX="35.0" layoutY="416.0" prefHeight="124.0" prefWidth="832.0">
+            <TextArea fx:id="txtConsole" layoutX="35.0" layoutY="411.0" prefHeight="124.0" prefWidth="832.0">
                <font>
                   <Font name="Meiryo UI" size="12.0" />
                </font>
