@@ -1,5 +1,5 @@
 .root {
-	-fx-background-color: #f0fff0;
+	-fx-background-color: #F0FFF0;
 }
 
 .button {
@@ -10,4 +10,8 @@
 
 .button:hover {
 	-fx-background-color: linear-gradient(#2A5058, #61a2b1);
+}
+
+.text-area .content {
+	-fx-background-color: #F5F5F5;
 }

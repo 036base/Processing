@@ -1,11 +1,13 @@
 package com.awesomebase.mycoloring;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintStream;
 import java.net.URL;
 import java.util.Properties;
 import java.util.ResourceBundle;
@@ -25,6 +27,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.RadioButton;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.layout.BorderPane;
@@ -84,9 +87,9 @@ public class MyColoringController implements Initializable {
 	@FXML
 	private TextField txtMinImageScale;
 	@FXML
-	private Button btnMainSketchStart;
+	private TextArea txtConsole;
 	@FXML
-	private Button btnMainSketchStop;
+	private Button btnMainSketchStart;
 	@FXML
 	private Button btnExit;
 
@@ -118,6 +121,11 @@ public class MyColoringController implements Initializable {
 //			addNumericTextFilter(txtMaxImageScale, 5, true);
 //			// 最小縮小倍率
 //			addNumericTextFilter(txtMinImageScale, 5, true);
+			// コンソールメッセージ
+			txtConsole.setEditable(false);
+
+			// コンソール出力
+			redirectConsole(txtConsole);
 
 			// 画面に設定値を表示
 			dispProperties();
@@ -220,26 +228,16 @@ public class MyColoringController implements Initializable {
 			// 設定値をプロパティファイルに保存
 			saveProperties();
 
+			// 起動ボタン使用不可
+			btnMainSketchStart.setDisable(true);
+
 			// アニメーション起動
 			_mainSketch.mainSketchStartUp();
+
 		} catch (Exception e) {
 			_logger.error("*** System Error!! ***", e);
-		}
-	}
-
-	/**
-	 * 停止ボタン押下処理
-	 * @param evt
-	 */
-	@FXML
-	protected void onMainSketchStop(ActionEvent evt) {
-		try {
-			//TODO:exitでSystem.exitが実行されるので、設定画面も終了してしまう...
-
-			// アニメーション停止
-			_mainSketch.exit();
-		} catch (Exception e) {
-			_logger.error("*** System Error!! ***", e);
+			// 起動ボタン使用可
+			btnMainSketchStart.setDisable(false);
 		}
 	}
 
@@ -253,8 +251,11 @@ public class MyColoringController implements Initializable {
 			// 終了
 			Platform.exit();
 
-			//TODO:↑の前にSTOP？EXITを実行すればいいのだけど...
+			// アニメーション終了
+			_mainSketch.exit();
+
 			System.exit(0);
+
 		} catch (Exception e) {
 			_logger.error("*** System Error!! ***", e);
 		}
@@ -336,7 +337,7 @@ public class MyColoringController implements Initializable {
 	 */
 	private void dispProperties() {
 		// フルスクリーンモード
-		if (_properties.getProperty("background_mode") == "1") {
+		if ("1".equals(_properties.getProperty("full_screen"))) {
 			rdoFullScreenModeOn.setSelected(true);
 			rdoFullScreenModeOff.setSelected(false);
 		} else {
@@ -353,7 +354,7 @@ public class MyColoringController implements Initializable {
 		txtScreenSizeHeight.setText(screenSize[1]);
 
 		// 背景モード
-		if (_properties.getProperty("background_mode") == "1") {
+		if ("1".equals(_properties.getProperty("background_mode"))) {
 			rdoBackgroundModeMovie.setSelected(true);
 			rdoBackgroundModeImage.setSelected(false);
 		} else {
@@ -396,9 +397,9 @@ public class MyColoringController implements Initializable {
 		try {
 			// フルスクリーンモード
 			if (rdoFullScreenModeOn.isSelected()) {
-				_properties.setProperty("background_mode", "1");
+				_properties.setProperty("full_screen", "1");
 			} else {
-				_properties.setProperty("background_mode", "0");
+				_properties.setProperty("full_screen", "0");
 			}
 
 			// ディスプレイ番号
@@ -555,4 +556,20 @@ public class MyColoringController implements Initializable {
 		showMessageDialog(msg, AlertType.ERROR);
 	}
 
+
+	private void redirectConsole(TextArea textarea) {
+	    final ByteArrayOutputStream bytes = new ByteArrayOutputStream() {
+	        @Override
+	        public synchronized void flush() throws IOException {
+	            textarea.appendText(toString());
+	            super.reset();
+	        }
+	    };
+
+	    // trueをつけるといいタイミングでflushされる
+	    PrintStream out = new PrintStream(bytes, true);
+
+	    System.setErr(out);
+	    System.setOut(out);
+	}
 }

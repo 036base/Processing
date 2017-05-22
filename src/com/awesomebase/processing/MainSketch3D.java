@@ -50,7 +50,6 @@ public class MainSketch3D extends PApplet {
 
 	private boolean _recording = false;
 
-
 	public static void main(String[] args) {
 		Logger logger = LogManager.getLogger();
 		try {
@@ -126,6 +125,7 @@ public class MainSketch3D extends PApplet {
 	public void setup() {
 		try {
 			_logger.info("Setup...");
+			hint(DISABLE_OPENGL_ERRORS);
 			hint(ENABLE_DEPTH_SORT);
 
 			// 画面のタイトル、リサイズ許可設定
@@ -385,6 +385,8 @@ public class MainSketch3D extends PApplet {
 
 		public Character(File file) {
 			_logger.info("Create image " + file.getName());
+			// 設定・起動画面に表示
+			System.out.println(file.getName() + " を取り込みました。");
 
 			// ユニークID
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmssSSS");
