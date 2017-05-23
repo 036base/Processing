@@ -6,7 +6,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.PrintStream;
 import java.net.URL;
 import java.util.Properties;
@@ -83,10 +84,6 @@ public class MyColoringController implements Initializable {
 	@FXML
 	private TextField txtDefaultAnimationSpeed;
 	@FXML
-	private TextField txtMaxImageScale;
-	@FXML
-	private TextField txtMinImageScale;
-	@FXML
 	private TextArea txtConsole;
 	@FXML
 	private Button btnMainSketchStart;
@@ -97,10 +94,7 @@ public class MyColoringController implements Initializable {
 	public void initialize(URL location, ResourceBundle resources) {
 		try {
 			// 設定ファイル読み込み
-			InputStream inputStream = new FileInputStream("processing.properties");
-			_properties.load(inputStream);
-			inputStream.close();
-
+			_properties.load((new InputStreamReader(new FileInputStream("processing.properties"), "UTF-8")));
 
 			//--------------------------------
 			// 入力制御の設定
@@ -117,10 +111,6 @@ public class MyColoringController implements Initializable {
 			addNumericTextFilter(txtDefaultImageWidth, 4, false);
 			// デフォルトアニメーション速度
 			addNumericTextFilter(txtDefaultAnimationSpeed, 5, true);
-//			// 最大拡大倍率
-//			addNumericTextFilter(txtMaxImageScale, 5, true);
-//			// 最小縮小倍率
-//			addNumericTextFilter(txtMinImageScale, 5, true);
 			// コンソールメッセージ
 			txtConsole.setEditable(false);
 
@@ -129,6 +119,8 @@ public class MyColoringController implements Initializable {
 
 			// 画面に設定値を表示
 			dispProperties();
+
+			txtDisplayNo.requestFocus();
 
 		} catch (Exception e) {
 			_logger.error("*** System Error!! ***", e);
@@ -294,7 +286,7 @@ public class MyColoringController implements Initializable {
 			return false;
 		}
 
-		if (!chkRequired(txtMonitoringInterval, "キャラクター画像読み取り監視間隔")) {
+		if (!chkRequired(txtMonitoringInterval, "キャラクター画像取り込み監視間隔")) {
 			return false;
 		}
 
@@ -305,14 +297,6 @@ public class MyColoringController implements Initializable {
 		if (!chkRequired(txtDefaultAnimationSpeed, "デフォルトアニメーション速度")) {
 			return false;
 		}
-
-//		if (!chkRequired(txtMaxImageScale, "キャラクター拡大最大倍率")) {
-//			return false;
-//		}
-//
-//		if (!chkRequired(txtMinImageScale, "キャラクター縮小最小倍率")) {
-//			return false;
-//		}
 
 		//--------------------------------
 		// ファイルパスの疎通チェック
@@ -371,20 +355,15 @@ public class MyColoringController implements Initializable {
 		// キャラクター画像フォルダ
 		txtCharacterImageFolder.setText(_properties.getProperty("dir_animated_image"));
 
-		// キャラクター画像読み取り監視間隔
-		txtMonitoringInterval.setText(_properties.getProperty("dir_monitoring_interval"));
+		// キャラクター画像取り込み監視間隔
+		Long interval = Long.parseLong(_properties.getProperty("dir_monitoring_interval")) / 1000;
+		txtMonitoringInterval.setText(String.valueOf(interval));
 
 		// キャラクター画像デフォルト幅
 		txtDefaultImageWidth.setText(_properties.getProperty("default_image_width"));
 
 		// デフォルトアニメーション速度
 		txtDefaultAnimationSpeed.setText(_properties.getProperty("default_animation_speed"));
-
-		// キャラクター最大倍率
-		txtMaxImageScale.setText(_properties.getProperty("max_image_scale"));
-
-		// キャラクター最小倍率
-		txtMinImageScale.setText(_properties.getProperty("min_image_scale"));
 
 	}
 
@@ -424,8 +403,9 @@ public class MyColoringController implements Initializable {
 			// キャラクター画像フォルダ
 			_properties.setProperty("dir_animated_image", txtCharacterImageFolder.getText());
 
-			// キャラクター画像読み取り監視間隔
-			_properties.setProperty("dir_monitoring_interval", txtMonitoringInterval.getText());
+			// キャラクター画像取り込み監視間隔
+			Long interval = Long.parseLong(txtMonitoringInterval.getText()) * 1000;
+			_properties.setProperty("dir_monitoring_interval", String.valueOf(interval));
 
 			// キャラクター画像デフォルト幅
 			_properties.setProperty("default_image_width", txtDefaultImageWidth.getText());
@@ -433,14 +413,8 @@ public class MyColoringController implements Initializable {
 			// デフォルトアニメーション速度
 			_properties.setProperty("default_animation_speed", txtDefaultAnimationSpeed.getText());
 
-			// キャラクター最大倍率
-			_properties.setProperty("max_image_scale", txtMaxImageScale.getText());
-
-			// キャラクター最小倍率
-			_properties.setProperty("min_image_scale", txtMinImageScale.getText());
-
 			// 設定値を保存
-			_properties.store(new FileOutputStream("processing.properties"), "*** ぼくのぬりえ 設定ファイル ***");
+			_properties.store((new OutputStreamWriter(new FileOutputStream("processing.properties"), "UTF-8")), "*** ぼくのぬりえ 設定ファイル ***");
 
 		} catch (FileNotFoundException e) {
 			ret = false;
@@ -556,20 +530,26 @@ public class MyColoringController implements Initializable {
 		showMessageDialog(msg, AlertType.ERROR);
 	}
 
-
+	/**
+	 * 標準出力先をTextAreaに設定
+	 * @param textarea
+	 */
 	private void redirectConsole(TextArea textarea) {
-	    final ByteArrayOutputStream bytes = new ByteArrayOutputStream() {
-	        @Override
-	        public synchronized void flush() throws IOException {
-	            textarea.appendText(toString());
-	            super.reset();
-	        }
-	    };
+		final ByteArrayOutputStream bytes = new ByteArrayOutputStream() {
+			@Override
+			public synchronized void flush() throws IOException {
+				if (this.size() > 0) {
+					textarea.appendText(toString());
+				}
+				// 出力ごとにバッファをリセット
+				super.reset();
+			}
+		};
 
-	    // trueをつけるといいタイミングでflushされる
-	    PrintStream out = new PrintStream(bytes, true);
+		// trueをつけるといいタイミングでflushされる
+		PrintStream out = new PrintStream(bytes, true);
 
-	    System.setErr(out);
-	    System.setOut(out);
+		System.setErr(out);
+		System.setOut(out);
 	}
 }

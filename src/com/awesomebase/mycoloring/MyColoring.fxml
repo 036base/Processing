@@ -11,217 +11,220 @@
 
 <BorderPane fx:id="paneRoot" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.awesomebase.mycoloring.MyColoringController">
    <center>
-		<AnchorPane BorderPane.alignment="CENTER">
+		<AnchorPane styleClass="base-pane" BorderPane.alignment="CENTER">
 			<children>
-				<Label layoutX="13.0" layoutY="5.0" text="ぼくのぬりえ">
-					<font>
-						<Font name="Meiryo Bold" size="32.0" />
-					</font>
-				</Label>
-				<Label layoutX="38.0" layoutY="66.0" text="フルスクリーンモード">
-					<font>
-						<Font name="Meiryo" size="16.0" />
-					</font>
-				</Label>
-				<RadioButton fx:id="rdoFullScreenModeOff" layoutX="280.0" layoutY="66.0" mnemonicParsing="false" text="OFF">
-					<toggleGroup>
-						<ToggleGroup fx:id="fullScreenMode" />
-					</toggleGroup>
-					<font>
-						<Font name="Meiryo" size="16.0" />
-					</font>
-				</RadioButton>
-				<RadioButton fx:id="rdoFullScreenModeOn" layoutX="215.0" layoutY="66.0" mnemonicParsing="false" selected="true" text="ON" toggleGroup="$fullScreenMode">
-					<font>
-						<Font name="Meiryo" size="16.0" />
-					</font>
-				</RadioButton>
-				<Label layoutX="38.0" layoutY="100.0" text="フルスクリーン表示ディスプレイ番号">
-					<font>
-						<Font name="Meiryo" size="16.0" />
-					</font>
-				</Label>
-				<Label layoutX="430.0" layoutY="99.0" text="デフォルト画面サイズ">
-					<font>
-						<Font name="Meiryo" size="16.0" />
-					</font>
-				</Label>
-				<Label layoutX="38.0" layoutY="151.0" text="背景モード">
-					<font>
-						<Font name="Meiryo" size="16.0" />
-					</font>
-				</Label>
-				<RadioButton fx:id="rdoBackgroundModeImage" layoutX="134.0" layoutY="151.0" mnemonicParsing="false" selected="true" text="イメージ">
-					<font>
-						<Font name="Meiryo" size="16.0" />
-					</font>
-					<toggleGroup>
-						<ToggleGroup fx:id="backgroundMode" />
-					</toggleGroup>
-				</RadioButton>
-				<RadioButton fx:id="rdoBackgroundModeMovie" layoutX="239.0" layoutY="151.0" mnemonicParsing="false" text="ムービー" toggleGroup="$backgroundMode">
-					<font>
-						<Font name="Meiryo" size="16.0" />
-					</font>
-				</RadioButton>
-				<Label layoutX="681.0" layoutY="101.0" text="×">
-					<font>
-						<Font name="Meiryo" size="16.0" />
-					</font>
-				</Label>
-				<Label layoutX="38.0" layoutY="186.0" text="背景イメージファイル">
-					<font>
-						<Font name="Meiryo" size="16.0" />
-					</font>
-				</Label>
-				<Label layoutX="38.0" layoutY="224.0" text="背景ムービーファイル">
-					<font>
-						<Font name="Meiryo" size="16.0" />
-					</font>
-				</Label>
-				<Button fx:id="btnBackgroundMovieChooser" layoutX="658.0" layoutY="220.0" mnemonicParsing="false" onAction="#onBackgroundMovieChooser" text="参照">
-					<font>
-						<Font name="Meiryo" size="14.0" />
-					</font>
-				</Button>
-				<Button fx:id="btnCharacterImageFolderChooser" layoutX="692.0" layoutY="271.0" mnemonicParsing="false" onAction="#onCharacterImageFolderChooser" text="参照">
-					<font>
-						<Font name="Meiryo" size="14.0" />
-					</font>
-				</Button>
-				<Label layoutX="38.0" layoutY="274.0" text="キャラクター画像フォルダ">
-					<font>
-						<Font name="Meiryo" size="16.0" />
-					</font>
-				</Label>
-				<Label layoutX="38.0" layoutY="316.0" text="キャラクター画像読み取り監視間隔">
-					<font>
-						<Font name="Meiryo" size="16.0" />
-					</font>
-				</Label>
-				<Button fx:id="btnBackgroundImageChooser" layoutX="658.0" layoutY="183.0" mnemonicParsing="false" onAction="#onBackgroundImageChooser" text="参照">
-					<font>
-						<Font name="Meiryo" size="14.0" />
-					</font>
-				</Button>
-				<Label layoutX="382.0" layoutY="317.0" text="ミリ秒">
-					<font>
-						<Font name="Meiryo" size="16.0" />
-					</font>
-				</Label>
-				<Label layoutX="480.0" layoutY="316.0" text="キャラクター画像デフォルト幅">
-					<font>
-						<Font name="Meiryo" size="16.0" />
-					</font>
-				</Label>
-				<Label layoutX="795.0" layoutY="317.0" text="px">
-					<font>
-						<Font name="Meiryo" size="16.0" />
-					</font>
-				</Label>
-				<Label layoutX="38.0" layoutY="362.0" text="デフォルトアニメーション速度">
-					<font>
-						<Font name="Meiryo" size="16.0" />
-					</font>
-				</Label>
-				<Label layoutX="384.0" layoutY="362.0" text="キャラクター拡大縮小倍率" visible="false">
-					<font>
-						<Font name="Meiryo" size="16.0" />
-					</font>
-				</Label>
-				<Label layoutX="592.0" layoutY="362.0" text="最大" visible="false">
-					<font>
-						<Font name="Meiryo" size="16.0" />
-					</font>
-				</Label>
-				<Label layoutX="713.0" layoutY="363.0" text="\%" visible="false">
-					<font>
-						<Font name="Meiryo" size="16.0" />
-					</font>
-				</Label>
-				<Label layoutX="862.0" layoutY="363.0" text="\%" visible="false">
-					<font>
-						<Font name="Meiryo" size="16.0" />
-					</font>
-				</Label>
-				<Label layoutX="742.0" layoutY="363.0" text="最小" visible="false">
-					<font>
-						<Font name="Meiryo" size="16.0" />
-					</font>
-				</Label>
-				<Button fx:id="btnMainSketchStart" layoutX="505.0" layoutY="552.0" mnemonicParsing="false" onAction="#onMainSketchStart" prefHeight="40.0" prefWidth="180.0" styleClass="command-button" text="起動" BorderPane.alignment="BOTTOM_RIGHT">
+      				<Label id="title-text" layoutX="11.0" layoutY="7.0" text="ぼくのぬりえ">
+      					<font>
+      						<Font name="Meiryo Bold" size="32.0" />
+      					</font>
+      				</Label>
+				<Button id="command-button" fx:id="btnMainSketchStart" layoutX="656.0" layoutY="486.0" mnemonicParsing="false" onAction="#onMainSketchStart" prefHeight="100.0" prefWidth="100.0" text="起動" BorderPane.alignment="BOTTOM_RIGHT">
 					<BorderPane.margin>
 						<Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
 					</BorderPane.margin>
 					<font>
-						<Font name="Meiryo" size="16.0" />
+						<Font name="Meiryo Bold" size="28.0" />
 					</font>
 				</Button>
-				<Button fx:id="btnExit" layoutX="705.0" layoutY="552.0" mnemonicParsing="false" onAction="#onExit" prefHeight="40.0" prefWidth="180.0" styleClass="command-button" text="終了">
+				<Button id="command-button" fx:id="btnExit" layoutX="776.0" layoutY="486.0" mnemonicParsing="false" onAction="#onExit" prefHeight="100.0" prefWidth="100.0" text="終了">
 					<font>
-						<Font name="Meiryo" size="16.0" />
+						<Font name="Meiryo Bold" size="28.0" />
 					</font>
 				</Button>
-            <TextField fx:id="txtBackgroundImageFile" layoutX="204.0" layoutY="183.0" prefHeight="33.0" prefWidth="450.0">
-               <font>
-                  <Font name="Meiryo" size="14.0" />
-               </font>
-            </TextField>
-            <TextField fx:id="txtBackgroundMovieFile" layoutX="204.0" layoutY="220.0" prefHeight="33.0" prefWidth="450.0">
-               <font>
-                  <Font name="Meiryo" size="14.0" />
-               </font>
-            </TextField>
-            <TextField fx:id="txtCharacterImageFolder" layoutX="239.0" layoutY="271.0" prefHeight="33.0" prefWidth="450.0">
-               <font>
-                  <Font name="Meiryo" size="14.0" />
-               </font>
-            </TextField>
-            <TextField fx:id="txtDisplayNo" layoutX="317.0" layoutY="97.0" prefHeight="33.0" prefWidth="40.0">
-               <font>
-                  <Font name="Meiryo" size="14.0" />
-               </font>
-            </TextField>
-            <TextField fx:id="txtScreenSizeWidth" layoutX="599.0" layoutY="97.0" prefHeight="33.0" prefWidth="80.0">
-               <font>
-                  <Font name="Meiryo" size="14.0" />
-               </font>
-            </TextField>
-            <TextField fx:id="txtScreenSizeHeight" layoutX="696.0" layoutY="97.0" prefHeight="33.0" prefWidth="80.0">
-               <font>
-                  <Font name="Meiryo" size="14.0" />
-               </font>
-            </TextField>
-            <TextField fx:id="txtMonitoringInterval" layoutX="300.0" layoutY="313.0" prefHeight="33.0" prefWidth="80.0">
-               <font>
-                  <Font name="Meiryo" size="14.0" />
-               </font>
-            </TextField>
-            <TextField fx:id="txtDefaultImageWidth" layoutX="712.0" layoutY="313.0" prefHeight="33.0" prefWidth="80.0">
-               <font>
-                  <Font name="Meiryo" size="14.0" />
-               </font>
-            </TextField>
-            <TextField fx:id="txtDefaultAnimationSpeed" layoutX="270.0" layoutY="359.0" prefHeight="33.0" prefWidth="80.0">
-               <font>
-                  <Font name="Meiryo" size="14.0" />
-               </font>
-            </TextField>
-            <TextField fx:id="txtMaxImageScale" layoutX="630.0" layoutY="359.0" prefHeight="33.0" prefWidth="80.0" visible="false">
-               <font>
-                  <Font name="Meiryo" size="14.0" />
-               </font>
-            </TextField>
-            <TextField fx:id="txtMinImageScale" layoutX="779.0" layoutY="359.0" prefHeight="33.0" prefWidth="80.0" visible="false">
-               <font>
-                  <Font name="Meiryo" size="14.0" />
-               </font>
-            </TextField>
-            <TextArea fx:id="txtConsole" layoutX="35.0" layoutY="411.0" prefHeight="124.0" prefWidth="832.0">
+            <TextArea fx:id="txtConsole" layoutX="25.0" layoutY="474.0" prefHeight="112.0" prefWidth="501.0" promptText="起動中に処理内容が表示されます。">
                <font>
                   <Font name="Meiryo UI" size="12.0" />
                </font>
             </TextArea>
+            <TitledPane animated="false" collapsible="false" layoutX="25.0" layoutY="66.0" text="画面設定">
+              <content>
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="175.0" prefWidth="380.0">
+                     <children>
+            				<Label layoutX="14.0" layoutY="14.0" text="フルスクリーン">
+            					<font>
+            						<Font name="Meiryo" size="16.0" />
+            					</font>
+            				</Label>
+            				<RadioButton fx:id="rdoFullScreenModeOff" layoutX="203.0" layoutY="14.0" mnemonicParsing="false" text="OFF">
+            					<toggleGroup>
+            						<ToggleGroup fx:id="fullScreenMode" />
+            					</toggleGroup>
+            					<font>
+            						<Font name="Meiryo" size="16.0" />
+            					</font>
+            				</RadioButton>
+            				<RadioButton fx:id="rdoFullScreenModeOn" layoutX="139.0" layoutY="14.0" mnemonicParsing="false" selected="true" text="ON" toggleGroup="$fullScreenMode">
+            					<font>
+            						<Font name="Meiryo" size="16.0" />
+            					</font>
+            				</RadioButton>
+            				<Label layoutX="14.0" layoutY="53.0" text="フルスクリーン表示ディスプレイ番号">
+            					<font>
+            						<Font name="Meiryo" size="16.0" />
+            					</font>
+            				</Label>
+                        <TextField fx:id="txtDisplayNo" layoutX="293.0" layoutY="50.0" prefHeight="33.0" prefWidth="40.0">
+                           <font>
+                              <Font name="Meiryo" size="14.0" />
+                           </font>
+                        </TextField>
+            				<Label layoutX="14.0" layoutY="92.0" text="デフォルト画面サイズ">
+            					<font>
+            						<Font name="Meiryo" size="16.0" />
+            					</font>
+            				</Label>
+            				<Label layoutX="265.0" layoutY="94.0" text="×">
+            					<font>
+            						<Font name="Meiryo" size="16.0" />
+            					</font>
+            				</Label>
+                        <TextField fx:id="txtScreenSizeWidth" layoutX="183.0" layoutY="90.0" prefHeight="33.0" prefWidth="80.0">
+                           <font>
+                              <Font name="Meiryo" size="14.0" />
+                           </font>
+                        </TextField>
+                        <TextField fx:id="txtScreenSizeHeight" layoutX="280.0" layoutY="90.0" prefHeight="33.0" prefWidth="80.0">
+                           <font>
+                              <Font name="Meiryo" size="14.0" />
+                           </font>
+                        </TextField>
+                     </children>
+                  </AnchorPane>
+              </content>
+               <font>
+                  <Font name="Meiryo UI" size="16.0" />
+               </font>
+            </TitledPane>
+            <TitledPane animated="false" collapsible="false" layoutX="424.0" layoutY="66.0" text="キャラクター画像設定">
+              <content>
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="175.0" prefWidth="450.0">
+                     <children>
+            				<Label layoutX="14.0" layoutY="53.0" text="取り込み監視間隔">
+            					<font>
+            						<Font name="Meiryo" size="16.0" />
+            					</font>
+            				</Label>
+            				<Label layoutX="235.0" layoutY="54.0" text="秒">
+            					<font>
+            						<Font name="Meiryo" size="16.0" />
+            					</font>
+            				</Label>
+                        <TextField fx:id="txtMonitoringInterval" layoutX="150.0" layoutY="50.0" prefHeight="33.0" prefWidth="80.0">
+                           <font>
+                              <Font name="Meiryo" size="14.0" />
+                           </font>
+                        </TextField>
+            				<Label layoutX="14.0" layoutY="92.0" text="画像デフォルト幅">
+            					<font>
+            						<Font name="Meiryo" size="16.0" />
+            					</font>
+            				</Label>
+            				<Label layoutX="235.0" layoutY="93.0" text="px">
+            					<font>
+            						<Font name="Meiryo" size="16.0" />
+            					</font>
+            				</Label>
+                        <TextField fx:id="txtDefaultImageWidth" layoutX="150.0" layoutY="89.0" prefHeight="33.0" prefWidth="80.0">
+                           <font>
+                              <Font name="Meiryo" size="14.0" />
+                           </font>
+                        </TextField>
+            				<Label layoutX="14.0" layoutY="131.0" text="デフォルトアニメーション速度">
+            					<font>
+            						<Font name="Meiryo" size="16.0" />
+            					</font>
+            				</Label>
+                        <TextField fx:id="txtDefaultAnimationSpeed" layoutX="244.0" layoutY="128.0" prefHeight="33.0" prefWidth="80.0">
+                           <font>
+                              <Font name="Meiryo" size="14.0" />
+                           </font>
+                        </TextField>
+            				<Label layoutX="14.0" layoutY="14.0" text="画像フォルダ">
+            					<font>
+            						<Font name="Meiryo" size="16.0" />
+            					</font>
+            				</Label>
+            				<Button fx:id="btnCharacterImageFolderChooser" layoutX="394.0" layoutY="11.0" mnemonicParsing="false" onAction="#onCharacterImageFolderChooser" text="参照">
+            					<font>
+            						<Font name="Meiryo" size="14.0" />
+            					</font>
+            				</Button>
+                        <TextField fx:id="txtCharacterImageFolder" layoutX="120.0" layoutY="11.0" prefHeight="33.0" prefWidth="270.0">
+                           <font>
+                              <Font name="Meiryo" size="14.0" />
+                           </font>
+                        </TextField>
+                     </children>
+                  </AnchorPane>
+              </content>
+               <font>
+                  <Font name="Meiryo UI" size="16.0" />
+               </font>
+            </TitledPane>
+            <TitledPane animated="false" collapsible="false" layoutX="25.0" layoutY="290.0" text="背景設定">
+               <content>
+                  <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="140.0" prefWidth="500.0">
+                     <children>
+            				<Label layoutX="14.0" layoutY="14.0" text="背景モード">
+            					<font>
+            						<Font name="Meiryo" size="16.0" />
+            					</font>
+            				</Label>
+            				<RadioButton fx:id="rdoBackgroundModeImage" layoutX="110.0" layoutY="14.0" mnemonicParsing="false" selected="true" text="イメージ">
+            					<font>
+            						<Font name="Meiryo" size="16.0" />
+            					</font>
+            					<toggleGroup>
+            						<ToggleGroup fx:id="backgroundMode" />
+            					</toggleGroup>
+            				</RadioButton>
+            				<RadioButton fx:id="rdoBackgroundModeMovie" layoutX="215.0" layoutY="14.0" mnemonicParsing="false" text="ムービー" toggleGroup="$backgroundMode">
+            					<font>
+            						<Font name="Meiryo" size="16.0" />
+            					</font>
+            				</RadioButton>
+            				<Label layoutX="14.0" layoutY="53.0" text="イメージファイル">
+            					<font>
+            						<Font name="Meiryo" size="16.0" />
+            					</font>
+            				</Label>
+            				<Label layoutX="14.0" layoutY="92.0" text="ムービーファイル">
+            					<font>
+            						<Font name="Meiryo" size="16.0" />
+            					</font>
+            				</Label>
+            				<Button fx:id="btnBackgroundMovieChooser" layoutX="425.0" layoutY="89.0" mnemonicParsing="false" onAction="#onBackgroundMovieChooser" text="参照">
+            					<font>
+            						<Font name="Meiryo" size="14.0" />
+            					</font>
+            				</Button>
+            				<Button fx:id="btnBackgroundImageChooser" layoutX="425.0" layoutY="50.0" mnemonicParsing="false" onAction="#onBackgroundImageChooser" text="参照">
+            					<font>
+            						<Font name="Meiryo" size="14.0" />
+            					</font>
+            				</Button>
+                        <TextField fx:id="txtBackgroundImageFile" layoutX="151.0" layoutY="50.0" prefHeight="33.0" prefWidth="270.0">
+                           <font>
+                              <Font name="Meiryo" size="14.0" />
+                           </font>
+                        </TextField>
+                        <TextField fx:id="txtBackgroundMovieFile" layoutX="151.0" layoutY="89.0" prefHeight="33.0" prefWidth="270.0">
+                           <font>
+                              <Font name="Meiryo" size="14.0" />
+                           </font>
+                        </TextField>
+                     </children>
+                  </AnchorPane>
+               </content>
+               <font>
+                  <Font name="Meiryo UI" size="16.0" />
+               </font>
+            </TitledPane>
+            <Label id="produced-by-text" layoutX="620.0" layoutY="4.0" text="Produced by Awesome Base Co.,Ltd.">
+               <font>
+                  <Font name="Meiryo Bold" size="14.0" />
+               </font>
+            </Label>
 			</children>
 		</AnchorPane>
    </center>

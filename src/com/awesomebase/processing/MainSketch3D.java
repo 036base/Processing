@@ -3,7 +3,7 @@ package com.awesomebase.processing;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -35,9 +35,9 @@ import processing.video.Movie;
  */
 public class MainSketch3D extends PApplet {
 
-	private Logger _logger = LogManager.getLogger();
+	private final Logger _logger = LogManager.getLogger();
 
-	private Properties _properties;	// 設定ファイル
+	private final Properties _properties = new Properties();;
 
 	private String _backgroundMode;	// 背景設定
 	private PImage _backgroundImg;		// 背景イメージ
@@ -88,10 +88,7 @@ public class MainSketch3D extends PApplet {
 			_logger.info("Settings...");
 
 			// 設定ファイル読み込み
-			_properties = new Properties();
-			InputStream inputStream = new FileInputStream("processing.properties");
-			_properties.load(inputStream);
-			inputStream.close();
+			_properties.load((new InputStreamReader(new FileInputStream("processing.properties"), "UTF-8")));
 
 			// 初期処理
 			initProc();
@@ -125,7 +122,6 @@ public class MainSketch3D extends PApplet {
 	public void setup() {
 		try {
 			_logger.info("Setup...");
-			hint(DISABLE_OPENGL_ERRORS);
 			hint(ENABLE_DEPTH_SORT);
 
 			// 画面のタイトル、リサイズ許可設定
@@ -386,7 +382,7 @@ public class MainSketch3D extends PApplet {
 		public Character(File file) {
 			_logger.info("Create image " + file.getName());
 			// 設定・起動画面に表示
-			System.out.println(file.getName() + " を取り込みました。");
+			System.out.println((new SimpleDateFormat("yyyy/MM/dd HH:mm:ss")).format(Calendar.getInstance().getTime()) + " " + file.getName() + " を取り込みました。");
 
 			// ユニークID
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmssSSS");

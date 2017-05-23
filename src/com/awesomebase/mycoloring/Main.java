@@ -26,10 +26,6 @@ public class Main extends Application {
 		 *  fxmlのコントロール名、イベント名と一致させる。
 		 *  MyColoringControllerで先に宣言するとデザイナ側でコントロール名、イベント名を選択できる。
 		 *
-		 * インストーラも作成できる。（未検証）
-		 * build.fxbuild に必要は情報を設定（※作成には他のツールのインストールも必要）
-		 * http://wannabe-jellyfish.hatenablog.com/entry/2016/03/05/230100
-		 *
 		 *---------------------------------------------------------------------------------------------*/
 
 		try {
