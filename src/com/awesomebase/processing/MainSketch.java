@@ -78,7 +78,7 @@ public class MainSketch extends PApplet {
 
 			// 設定ファイル読み込み
 			_properties = new Properties();
-			InputStream inputStream = new FileInputStream("processing.properties");
+			InputStream inputStream = new FileInputStream("conf/processing.properties");
 			_properties.load(inputStream);
 			inputStream.close();
 

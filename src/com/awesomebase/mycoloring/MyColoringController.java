@@ -49,7 +49,7 @@ public class MyColoringController implements Initializable {
 
 	private final MainSketch3D _mainSketch = new MainSketch3D();
 
-	private final Properties _properties = new Properties();;
+	private final Properties _properties = new Properties();
 
 	@FXML
 	private BorderPane paneRoot;
@@ -98,7 +98,7 @@ public class MyColoringController implements Initializable {
 	public void initialize(URL location, ResourceBundle resources) {
 		try {
 			// 設定ファイル読み込み
-			_properties.load((new InputStreamReader(new FileInputStream("processing.properties"), "UTF-8")));
+			_properties.load((new InputStreamReader(new FileInputStream("conf/processing.properties"), "UTF-8")));
 
 			//--------------------------------
 			// 入力制御の設定
@@ -422,7 +422,7 @@ public class MyColoringController implements Initializable {
 			_properties.setProperty("default_animation_speed", txtDefaultAnimationSpeed.getText());
 
 			// 設定値を保存
-			_properties.store((new OutputStreamWriter(new FileOutputStream("processing.properties"), "UTF-8")), "*** ぼくのぬりえ 設定ファイル ***");
+			_properties.store((new OutputStreamWriter(new FileOutputStream("conf/processing.properties"), "UTF-8")), "*** ぼくのぬりえ 設定ファイル ***");
 
 		} catch (FileNotFoundException e) {
 			ret = false;

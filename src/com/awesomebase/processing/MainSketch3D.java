@@ -37,7 +37,7 @@ public class MainSketch3D extends PApplet {
 
 	private final Logger _logger = LogManager.getLogger();
 
-	private final Properties _properties = new Properties();;
+	private final Properties _properties = new Properties();
 
 	private String _backgroundMode;	// 背景設定
 	private PImage _backgroundImg;		// 背景イメージ
@@ -88,7 +88,7 @@ public class MainSketch3D extends PApplet {
 			_logger.info("Settings...");
 
 			// 設定ファイル読み込み
-			_properties.load((new InputStreamReader(new FileInputStream("processing.properties"), "UTF-8")));
+			_properties.load((new InputStreamReader(new FileInputStream("conf/processing.properties"), "UTF-8")));
 
 			// 初期処理
 			initProc();
