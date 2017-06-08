@@ -31,6 +31,8 @@ import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
@@ -86,6 +88,8 @@ public class MyColoringController implements Initializable {
 	@FXML
 	private TextArea txtConsole;
 	@FXML
+	private ImageView imvLogo;
+	@FXML
 	private Button btnMainSketchStart;
 	@FXML
 	private Button btnExit;
@@ -119,6 +123,10 @@ public class MyColoringController implements Initializable {
 
 			// 画面に設定値を表示
 			dispProperties();
+
+			// TODO:画像表示
+			Image image = new Image((new File("img/my-coloring-logo.jpg")).toURI().toString());
+			imvLogo.setImage(image);
 
 			txtDisplayNo.requestFocus();
 
@@ -549,7 +557,7 @@ public class MyColoringController implements Initializable {
 		// trueをつけるといいタイミングでflushされる
 		PrintStream out = new PrintStream(bytes, true);
 
-		System.setErr(out);
+		//System.setErr(out);
 		System.setOut(out);
 	}
 }

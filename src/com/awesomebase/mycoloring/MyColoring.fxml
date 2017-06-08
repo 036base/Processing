@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.image.*?>
 <?import com.awesomebase.custom.controls.javafx.*?>
 <?import com.awesomebase.custom.controls.*?>
 <?import javafx.geometry.*?>
@@ -225,6 +226,7 @@
                   <Font name="Meiryo Bold" size="14.0" />
                </font>
             </Label>
+            <ImageView fx:id="imvLogo" fitHeight="150.0" fitWidth="200.0" layoutX="676.0" layoutY="300.0" pickOnBounds="true" preserveRatio="true" />
 			</children>
 		</AnchorPane>
    </center>
