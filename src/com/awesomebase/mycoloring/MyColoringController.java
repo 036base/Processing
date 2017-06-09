@@ -146,8 +146,7 @@ public class MyColoringController implements Initializable {
 
 			fc.setTitle("ファイル選択");
 			// 拡張子フィルタを設定
-			fc.getExtensionFilters().add(
-					new FileChooser.ExtensionFilter("PNGファイル", "*.png"));
+			fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("イメージファイル", "*.png", "*.jpg", "*.jpeg", "*.jpe", "*.gif"));
 
 			// 初期ディレクトリをホームに設定
 			//fc.setInitialDirectory(new File(System.getProperty("user.home")));
@@ -175,6 +174,7 @@ public class MyColoringController implements Initializable {
 			fc.setTitle("ファイル選択");
 			// 拡張子フィルタを設定
 			fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MP4ファイル", "*.mp4"));
+
 			// 初期ディレクトリをホームに設定
 			//fc.setInitialDirectory(new File(System.getProperty("user.home")));
 			fc.setInitialDirectory(null);
