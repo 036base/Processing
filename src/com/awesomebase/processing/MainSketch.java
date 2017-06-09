@@ -308,7 +308,7 @@ public class MainSketch extends PApplet {
 		_minImageScale = Float.parseFloat(_properties.getProperty("min_image_scale"));
 
 		_logger.info("--- System Settings ---------------------------------------");
-		_logger.info("full_screen             : " + _properties.getProperty("background_mode"));
+		_logger.info("full_screen             : " + _properties.getProperty("full_screen"));
 		_logger.info("display_no              : " + _properties.getProperty("display_no"));
 		_logger.info("screen_size             : " + _properties.getProperty("screen_size"));
 		_logger.info("dir_animated_image      : " + _properties.getProperty("dir_animated_image"));

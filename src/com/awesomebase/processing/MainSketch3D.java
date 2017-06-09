@@ -318,7 +318,7 @@ public class MainSketch3D extends PApplet {
 		_animationSpeed = Float.parseFloat(_properties.getProperty("default_animation_speed"));
 
 		_logger.info("--- System Settings ---------------------------------------");
-		_logger.info("full_screen             : " + _properties.getProperty("background_mode"));
+		_logger.info("full_screen             : " + _properties.getProperty("full_screen"));
 		_logger.info("display_no              : " + _properties.getProperty("display_no"));
 		_logger.info("screen_size             : " + _properties.getProperty("screen_size"));
 		_logger.info("dir_animated_image      : " + _properties.getProperty("dir_animated_image"));
