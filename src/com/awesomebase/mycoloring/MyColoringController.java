@@ -1,6 +1,5 @@
 package com.awesomebase.mycoloring;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -8,7 +7,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
-import java.io.PrintStream;
 import java.net.URL;
 import java.util.Properties;
 import java.util.ResourceBundle;
@@ -18,8 +16,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.awesomebase.processing.MainSketch3D;
-
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -28,7 +24,6 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.RadioButton;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.image.Image;
@@ -46,8 +41,6 @@ import javafx.stage.FileChooser;
 public class MyColoringController implements Initializable {
 
 	private final Logger _logger = LogManager.getLogger();
-
-	private final MainSketch3D _mainSketch = new MainSketch3D();
 
 	private final Properties _properties = new Properties();
 
@@ -86,17 +79,32 @@ public class MyColoringController implements Initializable {
 	@FXML
 	private TextField txtDefaultAnimationSpeed;
 	@FXML
-	private TextArea txtConsole;
-	@FXML
 	private ImageView imvLogo;
 	@FXML
-	private Button btnMainSketchStart;
+	private Button btnSaveAndStart;
 	@FXML
-	private Button btnExit;
+	private Button btnSaveAndClose;
+	@FXML
+	private Button btnClose;
+
+
+	//----- プロパティ -----//
+	// 起動用シェルから実行されたか
+	private boolean isStartUpMode = false;
+	public boolean isStartUpMode() {
+		return isStartUpMode;
+	}
+	public void setStartUpMode(boolean isStartUpMode) {
+		this.isStartUpMode = isStartUpMode;
+	}
+
+
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		try {
+			_logger.info("initialize...");
+
 			// 設定ファイル読み込み
 			_properties.load((new InputStreamReader(new FileInputStream("conf/processing.properties"), "UTF-8")));
 
@@ -115,17 +123,14 @@ public class MyColoringController implements Initializable {
 			addNumericTextFilter(txtDefaultImageWidth, 4, false);
 			// デフォルトアニメーション速度
 			addNumericTextFilter(txtDefaultAnimationSpeed, 5, true);
-			// コンソールメッセージ
-			txtConsole.setEditable(false);
-
-			// コンソール出力
-			redirectConsole(txtConsole);
 
 			// 画面に設定値を表示
 			dispProperties();
 
 			// TODO:画像表示
 			Image image = new Image((new File("img/my-coloring-logo.jpg")).toURI().toString());
+			imvLogo.setFitWidth(image.getRequestedWidth());
+			imvLogo.setFitHeight(image.getRequestedHeight());
 			imvLogo.setImage(image);
 
 			txtDisplayNo.requestFocus();
@@ -136,17 +141,39 @@ public class MyColoringController implements Initializable {
 	}
 
 	/**
-	 * 背景イメージファイル参照ボタン押下処理
+	 * 初期処理
+	 *   initialize後に設定することを実装
+	 */
+	public void localInit() {
+		_logger.info("LocalInit...");
+
+		if (isStartUpMode) {
+			// 起動用VBScriptから実行された場合は起動ボタンを表示
+			btnSaveAndStart.setVisible(true);
+		} else {
+			// 単独で実行された場合は起動ボタン非表示
+			btnSaveAndStart.setVisible(false);
+		}
+	}
+
+	/**
+	 * ファイル参照ボタン押下処理
 	 * @param evt
 	 */
 	@FXML
-	protected void onBackgroundImageChooser(ActionEvent evt) {
+	protected void onFileChooser(ActionEvent evt) {
 		try {
 			FileChooser fc = new FileChooser();
-
 			fc.setTitle("ファイル選択");
+
 			// 拡張子フィルタを設定
-			fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("イメージファイル", "*.png", "*.jpg", "*.jpeg", "*.jpe", "*.gif"));
+			if (evt.getSource() == btnBackgroundImageChooser) {
+				// 背景イメージファイル
+				fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("イメージファイル", "*.png", "*.jpg", "*.jpeg", "*.jpe", "*.gif"));
+			} else if (evt.getSource() == btnBackgroundMovieChooser) {
+				// 背景ムービーファイル
+				fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MP4ファイル", "*.mp4"));
+			}
 
 			// 初期ディレクトリをホームに設定
 			//fc.setInitialDirectory(new File(System.getProperty("user.home")));
@@ -155,46 +182,28 @@ public class MyColoringController implements Initializable {
 			// ファイル選択
 			File file = fc.showOpenDialog(paneRoot.getScene().getWindow());
 			if (file != null) {
-				txtBackgroundImageFile.setText(file.getAbsolutePath());
+				if (evt.getSource() == btnBackgroundImageChooser) {
+					// 背景イメージファイル
+					txtBackgroundImageFile.setText(file.getAbsolutePath());
+				} else if (evt.getSource() == btnBackgroundMovieChooser) {
+					// 背景ムービーファイル
+					txtBackgroundMovieFile.setText(file.getAbsolutePath());
+				}
+			} else {
+
 			}
+
 		} catch (Exception e) {
 			_logger.error("*** System Error!! ***", e);
 		}
 	}
 
 	/**
-	 * 背景ムービーファイル参照ボタン押下処理
+	 * フォルダ参照ボタン押下処理
 	 * @param evt
 	 */
 	@FXML
-	protected void onBackgroundMovieChooser(ActionEvent evt) {
-		try {
-			FileChooser fc = new FileChooser();
-
-			fc.setTitle("ファイル選択");
-			// 拡張子フィルタを設定
-			fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("MP4ファイル", "*.mp4"));
-
-			// 初期ディレクトリをホームに設定
-			//fc.setInitialDirectory(new File(System.getProperty("user.home")));
-			fc.setInitialDirectory(null);
-
-			// ファイル選択
-			File file = fc.showOpenDialog(paneRoot.getScene().getWindow());
-			if (file != null) {
-				txtBackgroundMovieFile.setText(file.getAbsolutePath());
-			}
-		} catch (Exception e) {
-			_logger.error("*** System Error!! ***", e);
-		}
-	}
-
-	/**
-	 * キャラクター画像フォルダ参照ボタン押下処理
-	 * @param evt
-	 */
-	@FXML
-	protected void onCharacterImageFolderChooser(ActionEvent evt) {
+	protected void onFolderChooser(ActionEvent evt) {
 		try {
 			DirectoryChooser dc = new DirectoryChooser();
 
@@ -206,6 +215,7 @@ public class MyColoringController implements Initializable {
 			// ディレクトリ選択
 			File file = dc.showDialog(paneRoot.getScene().getWindow());
 			if (file != null) {
+				// キャラクター画像フォルダ
 				txtCharacterImageFolder.setText(file.getAbsolutePath());
 			}
 		} catch (Exception e) {
@@ -214,47 +224,30 @@ public class MyColoringController implements Initializable {
 	}
 
 	/**
-	 * 起動ボタン押下処理
+	 * 処理ボタン押下処理
 	 * @param evt
 	 */
 	@FXML
-	protected void onMainSketchStart(ActionEvent evt) {
+	protected void onCommandButton(ActionEvent evt) {
 		try {
-			// 入力チェック
-			if (!inputCheck()) {
-				return;
+			int ret = 0;
+
+			if (evt.getSource() == btnSaveAndStart || evt.getSource() == btnSaveAndClose) {
+				// 入力チェック
+				if (!inputCheck()) {
+					return;
+				}
+				// 設定値をプロパティファイルに保存
+				saveProperties();
 			}
 
-			// 設定値をプロパティファイルに保存
-			saveProperties();
+			if (evt.getSource() == btnSaveAndStart) {
+				ret = 1;
+			}
 
-			// 起動ボタン使用不可
-			btnMainSketchStart.setDisable(true);
-
-			// アニメーション起動
-			_mainSketch.mainSketchStartUp();
-
-		} catch (Exception e) {
-			_logger.error("*** System Error!! ***", e);
-			// 起動ボタン使用可
-			btnMainSketchStart.setDisable(false);
-		}
-	}
-
-	/**
-	 * 終了ボタン押下処理
-	 * @param evt
-	 */
-	@FXML
-	protected void onExit(ActionEvent evt) {
-		try {
 			// 終了
 			Platform.exit();
-
-			// アニメーション終了
-			_mainSketch.exit();
-
-			System.exit(0);
+			System.exit(ret);
 
 		} catch (Exception e) {
 			_logger.error("*** System Error!! ***", e);
@@ -422,7 +415,7 @@ public class MyColoringController implements Initializable {
 			_properties.setProperty("default_animation_speed", txtDefaultAnimationSpeed.getText());
 
 			// 設定値を保存
-			_properties.store((new OutputStreamWriter(new FileOutputStream("conf/processing.properties"), "UTF-8")), "*** ぼくのぬりえ 設定ファイル ***");
+			_properties.store((new OutputStreamWriter(new FileOutputStream("conf/processing.properties"), "UTF-8")), "MyColoring Configuration");
 
 		} catch (FileNotFoundException e) {
 			ret = false;
@@ -538,26 +531,4 @@ public class MyColoringController implements Initializable {
 		showMessageDialog(msg, AlertType.ERROR);
 	}
 
-	/**
-	 * 標準出力先をTextAreaに設定
-	 * @param textarea
-	 */
-	private void redirectConsole(TextArea textarea) {
-		final ByteArrayOutputStream bytes = new ByteArrayOutputStream() {
-			@Override
-			public synchronized void flush() throws IOException {
-				if (this.size() > 0) {
-					textarea.appendText(toString());
-				}
-				// 出力ごとにバッファをリセット
-				super.reset();
-			}
-		};
-
-		// trueをつけるといいタイミングでflushされる
-		PrintStream out = new PrintStream(bytes, true);
-
-		//System.setErr(out);
-		System.setOut(out);
-	}
 }

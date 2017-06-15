@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <project name="Processing" basedir="." default="mycoloring">
 	<!-- Mainクラス -->
-	<property name="main" value="com.awesomebase.mycoloring.Main" />
+	<property name="main" value="com.awesomebase.main.StartUp" />
 
 	<!-- カレントディレクトリ -->
 	<property name="base.dir" value="." />
@@ -13,7 +13,7 @@
 	<property name="build.class" value="bin" />
 
 	<!-- Jarファイル名 -->
-	<property name="build.jar" value="build/MyColoring.jar" />
+	<property name="build.jar" value="build/StartUp.jar" />
 
 	<!--クラスパス（コンパイル時にも利用） -->
 	<path id="classpath">

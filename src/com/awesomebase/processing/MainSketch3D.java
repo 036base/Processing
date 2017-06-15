@@ -65,20 +65,6 @@ public class MainSketch3D extends PApplet {
 		}
 	}
 
-	public  void mainSketchStartUp() {
-		try {
-			String className = Thread.currentThread().getStackTrace()[1].getClassName();
-
-			_logger.info("{} start...", className);
-
-			// Processing起動
-			PApplet.main(className);
-
-		} catch (Exception e) {
-			_logger.error("*** System Error!! ***", e);
-		}
-	}
-
 	/**
 	 * Processing設定
 	 */
@@ -128,6 +114,14 @@ public class MainSketch3D extends PApplet {
 			surface.setTitle("");
 			surface.setResizable(true);
 
+			// 画像フォルダから拡張子が「.png」のファイルを取得
+			final List<File> fileList = (List<File>) FileUtils.listFiles(new File(_properties.getProperty("dir_animated_image")), FileFilterUtils.suffixFileFilter(".png"), FileFilterUtils.trueFileFilter());
+
+			// キャラクタークラスを作成・初期化してリストに追加
+			_characterList = Collections.synchronizedList(new ArrayList<Character>());
+			_characterList = fileList.stream().sorted(Comparator.comparing(File::getName)).map(file -> new Character(file)).collect(Collectors.toList());
+
+			// 背景の設定
 			if ("0".equals(_backgroundMode)) {
 				// 背景画像の読み込み
 				_backgroundImg = loadImage(_properties.getProperty("file_background_image"));
@@ -143,13 +137,6 @@ public class MainSketch3D extends PApplet {
 			} else {
 				// 背景なし
 			}
-
-			// 画像フォルダから拡張子が「.png」のファイルを取得
-			final List<File> fileList = (List<File>) FileUtils.listFiles(new File(_properties.getProperty("dir_animated_image")), FileFilterUtils.suffixFileFilter(".png"), FileFilterUtils.trueFileFilter());
-
-			// キャラクタークラスを作成・初期化してリストに追加
-			_characterList = Collections.synchronizedList(new ArrayList<Character>());
-			_characterList = fileList.stream().map(file -> new Character(file)).collect(Collectors.toList());
 
 		} catch (Exception e) {
 			_logger.error("*** System Error!! ***", e);
@@ -184,6 +171,8 @@ public class MainSketch3D extends PApplet {
 				_characterList.sort((p1, p2) -> Long.compare(p1._uid, p2._uid));
 				// 古い順に削除
 				_characterList.subList(0, _characterList.size() -_maxImageCount).clear();
+				// ガベージ・コレクタを実行
+				System.gc();
 			}
 
 			// Z座標位置の昇順でソートして描画
@@ -381,8 +370,6 @@ public class MainSketch3D extends PApplet {
 
 		public Character(File file) {
 			_logger.info("Create image " + file.getName());
-			// 設定・起動画面に表示
-			System.out.println((new SimpleDateFormat("yyyy/MM/dd HH:mm:ss")).format(Calendar.getInstance().getTime()) + " " + file.getName() + " を取り込みました。");
 
 			// ユニークID
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmssSSS");

@@ -3,20 +3,19 @@
 
 １．Eclipseで「build.xml」を右クリック >「実行」>「Antビルド」を実行する。
 
-２．buildフォルダに「MyColoring.jar」が作成される。
+２．buildフォルダに「StartUp.jar」が作成される。
 
 ３．実行フォルダに以下のファイルをコピー。
-      ・MyColoring.jar
-      ・StartUp.bat
-      ・StartUp.vbs
+      ・StartUp.jar
+      ・StartUp.vbs（システム起動用）
+      ・MainSketch3D.bat（Processing起動用）
+      ・MyColoring.bat（管理画面起動用）
       ・confフォルダ
       ・imgフォルダ
       ・outputフォルダ
       ・libフォルダ
 
 ４．「StartUp.vbs」をダブルクリックするとシステムが起動する。
-
-
 
 --------------------------------------------------------------------
 ■ TODO ■
@@ -28,4 +27,8 @@
   サンプルとして「CreateEXE.bat」を作成。ただし、conf等のフォルダを同梱できるかわからない。
 
 
+　java起動オプション
+　http://d.hatena.ne.jp/torutk/20151127/p1
 
+
+http://takabrk.seesaa.net/article/445208235.html?seesaa_related=category

@@ -19,24 +19,19 @@
       						<Font name="Meiryo Bold" size="32.0" />
       					</font>
       				</Label>
-				<Button id="command-button" fx:id="btnMainSketchStart" layoutX="656.0" layoutY="486.0" mnemonicParsing="false" onAction="#onMainSketchStart" prefHeight="100.0" prefWidth="100.0" text="起動" BorderPane.alignment="BOTTOM_RIGHT">
+				<Button id="command-button" fx:id="btnSaveAndStart" layoutX="367.0" layoutY="516.0" mnemonicParsing="false" onAction="#onCommandButton" prefHeight="60.0" prefWidth="160.0" text="保存して起動" BorderPane.alignment="BOTTOM_RIGHT">
 					<BorderPane.margin>
 						<Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
 					</BorderPane.margin>
 					<font>
-						<Font name="Meiryo Bold" size="28.0" />
+						<Font name="Meiryo Bold" size="18.0" />
 					</font>
 				</Button>
-				<Button id="command-button" fx:id="btnExit" layoutX="776.0" layoutY="486.0" mnemonicParsing="false" onAction="#onExit" prefHeight="100.0" prefWidth="100.0" text="終了">
+				<Button id="command-button" fx:id="btnClose" layoutX="716.0" layoutY="516.0" mnemonicParsing="false" onAction="#onCommandButton" prefHeight="60.0" prefWidth="160.0" text="終了">
 					<font>
-						<Font name="Meiryo Bold" size="28.0" />
+						<Font name="Meiryo Bold" size="18.0" />
 					</font>
 				</Button>
-            <TextArea fx:id="txtConsole" layoutX="25.0" layoutY="474.0" prefHeight="112.0" prefWidth="501.0" promptText="起動中に処理内容が表示されます。">
-               <font>
-                  <Font name="Meiryo UI" size="12.0" />
-               </font>
-            </TextArea>
             <TitledPane animated="false" collapsible="false" layoutX="25.0" layoutY="66.0" text="画面設定">
               <content>
                 <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="175.0" prefWidth="380.0">
@@ -145,7 +140,7 @@
             						<Font name="Meiryo" size="16.0" />
             					</font>
             				</Label>
-            				<Button fx:id="btnCharacterImageFolderChooser" layoutX="394.0" layoutY="11.0" mnemonicParsing="false" onAction="#onCharacterImageFolderChooser" text="参照">
+            				<Button fx:id="btnCharacterImageFolderChooser" layoutX="394.0" layoutY="11.0" mnemonicParsing="false" onAction="#onFolderChooser" text="参照">
             					<font>
             						<Font name="Meiryo" size="14.0" />
             					</font>
@@ -194,12 +189,12 @@
             						<Font name="Meiryo" size="16.0" />
             					</font>
             				</Label>
-            				<Button fx:id="btnBackgroundMovieChooser" layoutX="425.0" layoutY="89.0" mnemonicParsing="false" onAction="#onBackgroundMovieChooser" text="参照">
+            				<Button fx:id="btnBackgroundMovieChooser" layoutX="425.0" layoutY="89.0" mnemonicParsing="false" onAction="#onFileChooser" text="参照">
             					<font>
             						<Font name="Meiryo" size="14.0" />
             					</font>
             				</Button>
-            				<Button fx:id="btnBackgroundImageChooser" layoutX="425.0" layoutY="50.0" mnemonicParsing="false" onAction="#onBackgroundImageChooser" text="参照">
+            				<Button fx:id="btnBackgroundImageChooser" layoutX="425.0" layoutY="50.0" mnemonicParsing="false" onAction="#onFileChooser" text="参照">
             					<font>
             						<Font name="Meiryo" size="14.0" />
             					</font>
@@ -226,7 +221,12 @@
                   <Font name="Meiryo Bold" size="14.0" />
                </font>
             </Label>
-            <ImageView fx:id="imvLogo" fitHeight="150.0" fitWidth="200.0" layoutX="676.0" layoutY="300.0" pickOnBounds="true" preserveRatio="true" />
+            <ImageView fx:id="imvLogo" fitHeight="200.0" fitWidth="200.0" layoutX="676.0" layoutY="300.0" pickOnBounds="true" preserveRatio="true" />
+            <Button id="command-button" fx:id="btnSaveAndClose" layoutX="540.0" layoutY="516.0" mnemonicParsing="false" onAction="#onCommandButton" prefHeight="60.0" prefWidth="160.0" text="保存して終了">
+               <font>
+                  <Font name="Meiryo Bold" size="18.0" />
+               </font>
+            </Button>
 			</children>
 		</AnchorPane>
    </center>
