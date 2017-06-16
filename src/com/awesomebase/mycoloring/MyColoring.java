@@ -1,5 +1,7 @@
 package com.awesomebase.mycoloring;
 
+import java.util.Arrays;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -40,7 +42,7 @@ public class MyColoring extends Application {
 	@Override
 	public void start(Stage primaryStage) {
 		try {
-			_logger.info("start...");
+			_logger.info("Start...");
 
 			FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("MyColoring.fxml"));
 
@@ -52,14 +54,12 @@ public class MyColoring extends Application {
 			// 引数により起動モード判定
 			final MyColoringController controller = (MyColoringController) fxmlLoader.getController();
 			if (_args != null && _args.length > 0) {
-				for (String arg : _args) {
-					_logger.info("Argument:" + arg);
-					if ("--startup".equals(arg)) {
-						controller.setStartUpMode(true);
-					}
+				_logger.info("Arguments:" + Arrays.toString(_args));
+				if(Arrays.asList(_args).contains("--startup")){
+					controller.setStartUpMode(true);
 				}
 			} else {
-				_logger.info("--- No Arguments ---");
+				_logger.info("No Arguments");
 			}
 			controller.localInit();
 
