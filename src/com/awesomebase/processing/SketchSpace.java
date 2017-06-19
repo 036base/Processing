@@ -358,6 +358,14 @@ public class SketchSpace extends PApplet {
 		private float _theta;				// 角度
 		private float _radius;			// 半径
 		private float _radiusDir;			// 半径増減
+		// 回転情報
+		private float _rotateAngle = 0;	// 回転角度
+		private int _rotateDir = 1;		// 回転向き
+		private boolean _rotate = false;	// 回転
+		// 変形情報
+		private float _shaerAngle = 0;	// 傾き角度
+		private int _shaerDir = 1;			// 傾き向き
+		private boolean _shaer = false;	// 傾き
 
 		private float _tempCosTheta;
 
@@ -399,6 +407,20 @@ public class SketchSpace extends PApplet {
 				_pointDir = -1;
 			}
 
+			if (ceil(random(5)) == 1) {
+				_rotate = true;
+			}
+
+			if (ceil(random(5)) == 1) {
+				_shaer = true;
+			}
+
+			// 回転と傾きは片方のみ
+			if (_rotate && _shaer) {
+				_rotate = ceil(random(2)) == 1;
+				_shaer = !_rotate;
+			}
+
 		}
 
 		public void update() {
@@ -430,8 +452,8 @@ public class SketchSpace extends PApplet {
 
 			// 中心点の座標を更新
 			_pos.x += _dir.x * (_speed * 0.2f);
-			_pos.y += _dir.y * (_speed * 0.5f);
-			_pos.z += _dir.z * (_speed * 0.5f);
+			_pos.y += _dir.y * (_speed * 0.2f);
+			_pos.z += _dir.z * (_speed * 0.2f);
 
 			// 回転角度を更新
 			_theta += 0.015 * _speed * _pointDir;
@@ -447,6 +469,22 @@ public class SketchSpace extends PApplet {
 					// 逆回転
 					_pointDir = -_pointDir;
 				}
+				if (rand % 50 == 0) {
+					// 回転
+					_rotate = !_rotate;
+					if (_rotate) {
+						_rotateDir = rand % 2 == 0 ? 1 : -1;
+					}
+				}
+				if (rand % 20 == 0) {
+					// 傾き
+					_shaer = !_shaer;
+				}
+				// 回転と傾きは片方のみ
+				if (_rotate && _shaer) {
+					_rotate = ceil(random(2)) == 1;
+					_shaer = !_rotate;
+				}
 			}
 			_tempCosTheta = cos(_theta);
 
@@ -454,6 +492,19 @@ public class SketchSpace extends PApplet {
 				_radiusDir = -_radiusDir;
 			} else if (rand % 20 == 0) {
 				_radiusDir = -_radiusDir;
+			}
+
+			// 回転
+			if (_rotate) {
+				_rotateAngle += 1.0f * _rotateDir;
+			}
+
+			// 変形
+			if (_shaer) {
+				_shaerAngle += 0.5f * _shaerDir;
+				if (_shaerAngle > 25 || _shaerAngle < -25) {
+					_shaerDir = -_shaerDir;
+				}
 			}
 
 		}
@@ -467,7 +518,15 @@ public class SketchSpace extends PApplet {
 			hint(DISABLE_DEPTH_TEST);
 			pushMatrix();
 
-			translate(_pos.x + _point.x, _pos.y, _pos.z + _point.z);
+			// 画像中央を回転の中心にする
+			translate(_pos.x + _point.x + _img.width / 2, _pos.y + _img.height / 2, _pos.z + _point.z);
+
+
+			// 回転の中心が画像中央なので、画像描画原点も画像中央にする
+			// こうすると、(0,0)に配置すれば期待した位置に画像が置ける
+			// これをしないと、image()命令で配置する座標計算が面倒になる
+			imageMode(CENTER);
+
 			rotateY(-_theta);
 			if (_pointDir > 0) {
 				rotateY(90);
@@ -475,8 +534,23 @@ public class SketchSpace extends PApplet {
 				rotateY(-90);
 			}
 
+			// 回転
+			if (_rotate) {
+				rotate(radians(_rotateAngle));
+			}
+
+			// 傾き
+			if (_shaer) {
+				shearX(radians(_shaerAngle));
+				shearY(radians(_shaerAngle));
+			}
+
 			// 描画
 			image(_img, 0, 0);
+
+
+			// 画像描画原点を元（画像の左上隅）に戻す
+			imageMode(CORNER);
 
 			popMatrix();
 			// zバッファの有効化

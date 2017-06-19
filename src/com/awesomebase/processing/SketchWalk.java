@@ -352,6 +352,8 @@ public class SketchWalk extends PApplet {
 		private PVector _dir;				// 進行方向
 		private float _speed = 1.0f;		// 速度
 		private float _scale = 1.0f;		// 倍率
+		private float _shaerAngle = 0;	// 傾き角度
+		private int _shaerDir = 1;			// 傾き向き
 
 		public Character(File file) {
 			_logger.info("Create image " + file.getName());
@@ -436,6 +438,11 @@ public class SketchWalk extends PApplet {
 //				}
 //			}
 
+			_shaerAngle += 0.5f * _shaerDir;
+			if (_shaerAngle > 20 || _shaerAngle < -20) {
+				_shaerDir = -_shaerDir;
+			}
+
 			// 中心点の座標を更新
 			_pos.x += _dir.x * _speed;
 //			_pos.y += _dir.y * _speed;
@@ -461,6 +468,8 @@ public class SketchWalk extends PApplet {
 
 			// 拡大縮小
 			scale(_scale);
+
+			shearX(radians(_shaerAngle));
 
 			// 回転の中心が画像中央なので、画像描画原点も画像中央にする
 			// こうすると、(0,0)に配置すれば期待した位置に画像が置ける

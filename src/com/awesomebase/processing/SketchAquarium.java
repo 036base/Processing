@@ -357,7 +357,7 @@ public class SketchAquarium extends PApplet {
 		private int _shakeDir = 1;			// 後部振り向き
 		private float _maxAngle = 0;		// 後部振り最大角度
 		private float _incAngle = 0;		// 後部振り増加角度
-		private boolean _shaking = false;	// 後部振り
+		private boolean _shake = false;	// 後部振り
 
 		// 周回情報
 		private PVector _point;			// 位置
@@ -404,7 +404,7 @@ public class SketchAquarium extends PApplet {
 			_maxAngle = ceil(random(10, 30));
 			_incAngle = ceil(random(1, 3));
 			if (ceil(random(1, 100)) < 30) {
-				_shaking = true;
+				_shake = true;
 			}
 
 			_point = new PVector(0, 0, 0);
@@ -477,7 +477,7 @@ public class SketchAquarium extends PApplet {
 					_shakeAngle = 0;
 				}
 				if (rand < 200) {
-					_shaking = !_shaking;
+					_shake = !_shake;
 				}
 			}
 			_tempCosTheta = cos(_theta);
@@ -512,7 +512,7 @@ public class SketchAquarium extends PApplet {
 
 			pushMatrix();
 			translate(_imgF.width, 0, 0);
-			if (_shaking) {
+			if (_shake) {
 				// 後部だけヒラヒラさせる
 				rotateY(radians(_shakeAngle));
 			}
