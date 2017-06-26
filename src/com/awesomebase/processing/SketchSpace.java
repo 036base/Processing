@@ -363,9 +363,9 @@ public class SketchSpace extends PApplet {
 		private int _rotateDir = 1;		// 回転向き
 		private boolean _rotate = false;	// 回転
 		// 変形情報
-		private float _shaerAngle = 0;	// 傾き角度
-		private int _shaerDir = 1;			// 傾き向き
-		private boolean _shaer = false;	// 傾き
+		private float _shearAngle = 0;	// 傾き角度
+		private int _shearDir = 1;			// 傾き向き
+		private boolean _shear = false;	// 傾き
 
 		private float _tempCosTheta;
 
@@ -412,13 +412,13 @@ public class SketchSpace extends PApplet {
 			}
 
 			if (ceil(random(5)) == 1) {
-				_shaer = true;
+				_shear = true;
 			}
 
 			// 回転と傾きは片方のみ
-			if (_rotate && _shaer) {
+			if (_rotate && _shear) {
 				_rotate = ceil(random(2)) == 1;
-				_shaer = !_rotate;
+				_shear = !_rotate;
 			}
 
 		}
@@ -426,14 +426,6 @@ public class SketchSpace extends PApplet {
 		public void update() {
 
 			int rand = ceil(random(0, 1000));
-
-			if (rand <= 50) {
-				// 速度をアップ
-				_speed = _animationSpeed + ceil(rand / 100);
-			} else if (rand >= 950) {
-				// 速度を戻す
-				_speed = _animationSpeed;
-			}
 
 			if ((_pos.x + _dir.x * _speed) < width * 0.1f || (_pos.x + _dir.x * _speed) > width * 0.9f) {
 				// X軸進行方向を逆転
@@ -456,7 +448,7 @@ public class SketchSpace extends PApplet {
 			_pos.z += _dir.z * (_speed * 0.2f);
 
 			// 回転角度を更新
-			_theta += 0.015 * _speed * _pointDir;
+			_theta += 0.01 * _speed * _pointDir;
 
 			// 周回点の座標を更新
 			_point.x = _radius * cos(_theta);
@@ -478,12 +470,12 @@ public class SketchSpace extends PApplet {
 				}
 				if (rand % 20 == 0) {
 					// 傾き
-					_shaer = !_shaer;
+					_shear = !_shear;
 				}
 				// 回転と傾きは片方のみ
-				if (_rotate && _shaer) {
+				if (_rotate && _shear) {
 					_rotate = ceil(random(2)) == 1;
-					_shaer = !_rotate;
+					_shear = !_rotate;
 				}
 			}
 			_tempCosTheta = cos(_theta);
@@ -500,10 +492,10 @@ public class SketchSpace extends PApplet {
 			}
 
 			// 変形
-			if (_shaer) {
-				_shaerAngle += 0.5f * _shaerDir;
-				if (_shaerAngle > 25 || _shaerAngle < -25) {
-					_shaerDir = -_shaerDir;
+			if (_shear) {
+				_shearAngle += 0.5f * _shearDir;
+				if (_shearAngle > 25 || _shearAngle < -25) {
+					_shearDir = -_shearDir;
 				}
 			}
 
@@ -540,9 +532,9 @@ public class SketchSpace extends PApplet {
 			}
 
 			// 傾き
-			if (_shaer) {
-				shearX(radians(_shaerAngle));
-				shearY(radians(_shaerAngle));
+			if (_shear) {
+				shearX(radians(_shearAngle));
+				shearY(radians(_shearAngle));
 			}
 
 			// 描画

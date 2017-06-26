@@ -363,6 +363,7 @@ public class SketchAquarium extends PApplet {
 		private PVector _point;			// 位置
 		private int _pointDir;				// 向き
 		private float _theta;				// 角度
+		private float _thetaSpeed;		// 角度増減速度
 		private float _radius;			// 半径
 		private float _radiusDir;			// 半径増減
 
@@ -408,27 +409,19 @@ public class SketchAquarium extends PApplet {
 			}
 
 			_point = new PVector(0, 0, 0);
+			_pointDir = ceil(random(2)) == 1 ? -1 : 1;
+
 			_theta = ceil(random(1, 180) / 5);
+			_thetaSpeed = ceil(random(2)) == 1 ? 0.01f : 0.015f;
+
 			_radius = ceil(random(0, 5)) * 100;
 			_radiusDir = 1;
-			_pointDir = 1;
-			if (ceil(random(2)) == 1) {
-				_pointDir = -1;
-			}
 
 		}
 
 		public void update() {
 
 			int rand = ceil(random(0, 1000));
-
-			if (rand <= 50) {
-				// 速度をアップ
-				_speed = _animationSpeed + ceil(rand / 100);
-			} else if (rand >= 950) {
-				// 速度を戻す
-				_speed = _animationSpeed;
-			}
 
 			if ((_pos.x + _dir.x * _speed) < width * 0.1f || (_pos.x + _dir.x * _speed) > width * 0.9f) {
 				// X軸進行方向を逆転
@@ -447,7 +440,7 @@ public class SketchAquarium extends PApplet {
 
 			// 中心点の座標を更新
 			_pos.x += _dir.x * (_speed * 0.2f);
-			_pos.y += _dir.y * (_speed * 0.5f);
+			_pos.y += _dir.y * (_speed * 0.2f);
 			_pos.z += _dir.z * (_speed * 0.5f);
 
 			// 後部振り角度を更新
@@ -457,7 +450,7 @@ public class SketchAquarium extends PApplet {
 			_shakeAngle += _incAngle * _shakeDir;
 
 			// 回転角度を更新
-			_theta += 0.015 * _speed * _pointDir;
+			_theta += _thetaSpeed * _speed * _pointDir;
 
 			// 周回点の座標を更新
 			_point.x = _radius * cos(_theta);
@@ -478,6 +471,9 @@ public class SketchAquarium extends PApplet {
 				}
 				if (rand < 200) {
 					_shake = !_shake;
+				}
+				if (rand % 100 == 0) {
+					_thetaSpeed = rand % 2 == 0 ? 0.01f : 0.015f;
 				}
 			}
 			_tempCosTheta = cos(_theta);

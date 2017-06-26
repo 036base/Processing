@@ -352,8 +352,6 @@ public class SketchWalk extends PApplet {
 		private PVector _dir;				// 進行方向
 		private float _speed = 1.0f;		// 速度
 		private float _scale = 1.0f;		// 倍率
-		private float _shaerAngle = 0;	// 傾き角度
-		private int _shaerDir = 1;			// 傾き向き
 
 		public Character(File file) {
 			_logger.info("Create image " + file.getName());
@@ -379,9 +377,6 @@ public class SketchWalk extends PApplet {
 			if (ceil(random(2)) == 1) {
 				_dir.y = -1;
 			}
-			if (ceil(random(2)) == 1) {
-				_dir.z = -1;
-			}
 			_speed = _animationSpeed;
 
 			// 倍率を設定 ※上にいくほど小さく(遠く)なる
@@ -396,21 +391,13 @@ public class SketchWalk extends PApplet {
 
 		public void update() {
 
-			int rand = ceil(random(0, 1000));
-
-			if (rand <= 50) {
-				// 速度をアップ
-				_speed = _animationSpeed + ceil(rand / 100);
-			} else if (rand >= 950) {
-				// 速度を戻す
-				_speed = _animationSpeed;
-			}
-
 			if (((_pos.x + _dir.x * _speed) < 0 - _img.width - 50) || ((_pos.x + _dir.x * _speed) > width + _img.width + 50)) {
-				// X軸進行方向を逆転
+				// 画面領域から外れたらX軸進行方向を逆転
 				_dir.x = -_dir.x;
+
 				// Y軸位置を設定
 				_pos.y = random(height * 0.3f, (height - _img.height) * 0.9f);
+
 				// 倍率を設定 ※上にいくほど小さく(遠く)なる
 				if (_pos.y >= height * 0.3f && _pos.y < height * 0.5f) {
 					_scale = 0.5f;
@@ -419,33 +406,20 @@ public class SketchWalk extends PApplet {
 				} else if (_pos.y >= height * 0.7f) {
 					_scale = 1.5f;
 				}
+
+				// 速度変更
+				_speed = ceil(random(3)) == 1 ? _animationSpeed + ceil(random(0, 2)) : _animationSpeed;
+
 			} else {
 				// ランダムに方向転換
-//				if (rand <= 3) {
-//					// X軸進行方向を逆転
-//					_dir.x = -_dir.x;
-//				}
-			}
-
-//			if (((_pos.y + _dir.y * _speed) < -100) || ((_pos.y + _dir.y * _speed) > height + 100)) {
-//				// Y軸進行方向を逆転
-//				_dir.y = -_dir.y;
-//			} else {
-//				// ランダムに方向転換
-//				if (rand >= 11 && rand <= 15) {
-//					// Y軸進行方向を逆転
-//					_dir.y = -_dir.y;
-//				}
-//			}
-
-			_shaerAngle += 0.5f * _shaerDir;
-			if (_shaerAngle > 20 || _shaerAngle < -20) {
-				_shaerDir = -_shaerDir;
+				if (ceil(random(0, 1000)) <= 3) {
+					// X軸進行方向を逆転
+					_dir.x = -_dir.x;
+				}
 			}
 
 			// 中心点の座標を更新
 			_pos.x += _dir.x * _speed;
-//			_pos.y += _dir.y * _speed;
 
 		}
 
@@ -458,8 +432,11 @@ public class SketchWalk extends PApplet {
 			hint(DISABLE_DEPTH_TEST);
 			pushMatrix();
 
-			// 画像中央を回転の中心にする
-			translate(_pos.x + _img.width, _pos.y + _img.height / 2, _pos.z);
+			// 画像中央を中心にする
+			translate(_pos.x + _img.width, _pos.y + _img.height / 2);
+
+			// 画像描画原点も画像中央にする
+			imageMode(CENTER);
 
 			if (_dir.x > 0) {
 				// 左右反転（※基本画像は左向き）
@@ -468,13 +445,6 @@ public class SketchWalk extends PApplet {
 
 			// 拡大縮小
 			scale(_scale);
-
-			shearX(radians(_shaerAngle));
-
-			// 回転の中心が画像中央なので、画像描画原点も画像中央にする
-			// こうすると、(0,0)に配置すれば期待した位置に画像が置ける
-			// これをしないと、image()命令で配置する座標計算が面倒になる
-			imageMode(CENTER);
 
 			// 描画
 			image(_img, 0, 0);
