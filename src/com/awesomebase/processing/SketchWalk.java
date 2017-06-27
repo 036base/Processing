@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
@@ -44,7 +45,6 @@ public class SketchWalk extends PApplet {
 	private Movie _backgroundMov;		// 背景ムービー
 	private int _maxImageCount;		// 最大表示数
 	private int _defaultImageWidth;	// 画像の初期幅
-	private float _animationSpeed;	// デフォルトアニメーション速度
 
 	private  List<Character> _characterList;
 
@@ -110,9 +110,8 @@ public class SketchWalk extends PApplet {
 			_logger.info("Setup...");
 			hint(ENABLE_DEPTH_SORT);
 
-			// 画面のタイトル、リサイズ許可設定
+			// 画面のタイトル
 			surface.setTitle("");
-			surface.setResizable(true);
 
 			// 画像フォルダから拡張子が「.png」のファイルを取得
 			final List<File> fileList = (List<File>) FileUtils.listFiles(new File(_properties.getProperty("dir_animated_image")), FileFilterUtils.suffixFileFilter(".png"), FileFilterUtils.trueFileFilter());
@@ -137,6 +136,9 @@ public class SketchWalk extends PApplet {
 			} else {
 				// 背景なし
 			}
+
+			// リサイズ許可設定
+			surface.setResizable(true);
 
 		} catch (Exception e) {
 			_logger.error("*** System Error!! ***", e);
@@ -165,7 +167,6 @@ public class SketchWalk extends PApplet {
 			// zバッファの有効化
 			hint(ENABLE_DEPTH_TEST);
 
-
 			if (_characterList.size() > _maxImageCount) {
 				// UIDの昇順でソート
 				_characterList.sort((p1, p2) -> Long.compare(p1._uid, p2._uid));
@@ -175,10 +176,16 @@ public class SketchWalk extends PApplet {
 				System.gc();
 			}
 
-			// Y座標位置の昇順でソートして描画
-			_characterList.stream()
-					.sorted(Comparator.comparing(Character::getPosY))
-					.forEach(a -> a.draw());
+
+			// SIDの昇順でソート
+			_characterList.sort((p1, p2) -> Long.compare(p1._sid, p2._sid));
+			if (_characterList.size() == 1) {
+				_characterList.get(0).draw();
+			} else if (_characterList.size() > 1) {
+				_characterList.subList(0, 2).stream()
+						.sorted(Comparator.comparing(Character::getScale))
+						.forEach(a -> a.draw());
+			}
 
 			if (_recording) {
 				// フレームを保存する
@@ -303,8 +310,6 @@ public class SketchWalk extends PApplet {
 		_maxImageCount = Integer.parseInt(_properties.getProperty("max_image_count"));
 		// 画像の初期幅
 		_defaultImageWidth = Integer.parseInt(_properties.getProperty("default_image_width"));
-		// デフォルトアニメーション速度
-		_animationSpeed = Float.parseFloat(_properties.getProperty("default_animation_speed"));
 
 		_logger.info("--- System Settings ---------------------------------------");
 		_logger.info("full_screen             : " + _properties.getProperty("full_screen"));
@@ -317,7 +322,6 @@ public class SketchWalk extends PApplet {
 		_logger.info("file_background_movie   : " + _properties.getProperty("file_background_movie"));
 		_logger.info("max_image_count         : " + _properties.getProperty("max_image_count"));
 		_logger.info("default_image_width     : " + _properties.getProperty("default_image_width"));
-		_logger.info("default_animation_speed : " + _properties.getProperty("default_animation_speed"));
 		_logger.info("-----------------------------------------------------------");
 
 		File chk;
@@ -347,18 +351,24 @@ public class SketchWalk extends PApplet {
 	 */
 	public class Character {
 		private long _uid;					// ユニークID
+		private long _sid;					// ソートID
 		private PImage _img;				// イメージ
 		private PVector _pos;				// 座標
-		private PVector _dir;				// 進行方向
-		private float _speed = 1.0f;		// 速度
-		private float _scale = 1.0f;		// 倍率
+		private Float _interval;			// 表示間隔
+		private float _scale = 0.1f;		// 倍率
+		private float _maxScale = 0.0f;	// 最大倍率
+
+		SimpleDateFormat _sdf = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+		List<Float> _intervalList = Arrays.asList(new Float[] { 60f, 75f, 90f, 105f });
+		List<Float> _increaseList = Arrays.asList(new Float[] { 0.3f, 0.5f, 0.7f, 0.9f });
 
 		public Character(File file) {
 			_logger.info("Create image " + file.getName());
 
 			// ユニークID
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmssSSS");
-			_uid = Long.parseLong(sdf.format(Calendar.getInstance().getTime()));
+			_uid = Long.parseLong(_sdf.format(Calendar.getInstance().getTime()));
+			// ソートID
+			_sid = Long.parseLong(_sdf.format(Calendar.getInstance().getTime()));
 
 			// 画像透過処理
 			BufferedImage bimg = ImageUtil.Transparency(file);
@@ -369,79 +379,57 @@ public class SketchWalk extends PApplet {
 			_img.resize(_defaultImageWidth, 0);
 
 			// 初期設定
-			_pos = new PVector(random(width * 0.1f, width * 0.9f), random(height * 0.3f, (height - _img.height) * 0.9f), 0);
-			_dir = new PVector(1, 1, 1);
-			if (ceil(random(2)) == 1) {
-				_dir.x = -1;
-			}
-			if (ceil(random(2)) == 1) {
-				_dir.y = -1;
-			}
-			_speed = _animationSpeed;
-
-			// 倍率を設定 ※上にいくほど小さく(遠く)なる
-			if (_pos.y >= height * 0.3f && _pos.y < height * 0.5f) {
-				_scale = 0.5f;
-			} else if (_pos.y >= height * 0.5f && _pos.y < height * 0.7f) {
-				_scale = 1.0f;
-			} else if (_pos.y >= height * 0.7f) {
-				_scale = 1.5f;
-			}
+			_pos = new PVector(random(width * 0.4f, width * 0.6f) - (_img.width * _scale / 2), 0, 0);
+			_interval = _intervalList.get(floor(random(0, _intervalList.size())));
+			_scale = 1.0f;
+			_maxScale = ceil(height / _img.height);
 		}
 
-		public void update() {
+		public boolean update() {
 
-			if (((_pos.x + _dir.x * _speed) < 0 - _img.width - 50) || ((_pos.x + _dir.x * _speed) > width + _img.width + 50)) {
-				// 画面領域から外れたらX軸進行方向を逆転
-				_dir.x = -_dir.x;
+			if (frameCount % _interval == 0) {
 
-				// Y軸位置を設定
-				_pos.y = random(height * 0.3f, (height - _img.height) * 0.9f);
+				if (_scale <= _maxScale * 0.3) {
+					_pos.x = random(width * 0.4f, width * 0.6f) - (_img.width * _scale / 2);
+				} if (_scale <= _maxScale * 0.7) {
+					_pos.x = random(width * 0.3f, width * 0.7f) - (_img.width * _scale / 2);
+				} else  {
+					_pos.x = random(width * 0.2f, width * 0.8f) - (_img.width * _scale / 2);
+				}
 
-				// 倍率を設定 ※上にいくほど小さく(遠く)なる
-				if (_pos.y >= height * 0.3f && _pos.y < height * 0.5f) {
-					_scale = 0.5f;
-				} else if (_pos.y >= height * 0.5f && _pos.y < height * 0.7f) {
+				if (_scale >= _maxScale) {
+					// ソートIDを再採番
+					_sid = Long.parseLong(_sdf.format(Calendar.getInstance().getTime()));
+					// 表示間隔を再設定
+					_interval = _intervalList.get(floor(random(0, _intervalList.size())));
+					// 倍率をリセット
 					_scale = 1.0f;
-				} else if (_pos.y >= height * 0.7f) {
-					_scale = 1.5f;
+					return false;
 				}
 
-				// 速度変更
-				_speed = ceil(random(3)) == 1 ? _animationSpeed + ceil(random(0, 2)) : _animationSpeed;
-
-			} else {
-				// ランダムに方向転換
-				if (ceil(random(0, 1000)) <= 3) {
-					// X軸進行方向を逆転
-					_dir.x = -_dir.x;
+				// 倍率更新
+				_scale += _increaseList.get(floor(random(0, _increaseList.size())));
+				if (_scale > _maxScale) {
+					_scale = _maxScale;
 				}
+
 			}
 
-			// 中心点の座標を更新
-			_pos.x += _dir.x * _speed;
-
+			return true;
 		}
 
 		public void draw() {
 
 			// 座標更新
-			update();
+			if (!update()) {
+				return;
+			}
 
 			// zバッファの無効化
 			hint(DISABLE_DEPTH_TEST);
 			pushMatrix();
 
-			// 画像中央を中心にする
-			translate(_pos.x + _img.width, _pos.y + _img.height / 2);
-
-			// 画像描画原点も画像中央にする
-			imageMode(CENTER);
-
-			if (_dir.x > 0) {
-				// 左右反転（※基本画像は左向き）
-				scale(-1, 1);
-			}
+			translate(_pos.x, height / 2 - (_img.height * _scale / 2));
 
 			// 拡大縮小
 			scale(_scale);
@@ -449,18 +437,16 @@ public class SketchWalk extends PApplet {
 			// 描画
 			image(_img, 0, 0);
 
-			// 画像描画原点を元（画像の左上隅）に戻す
-			imageMode(CORNER);
-
 			popMatrix();
+
 			// zバッファの有効化
 			hint(ENABLE_DEPTH_TEST);
 
 		}
 
 		/* ----- getter / setter -----*/
-		public float getPosY() {
-			return _pos.y;
+		public float getScale() {
+			return _scale;
 		}
 
 

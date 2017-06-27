@@ -11,10 +11,15 @@ Dim cmdReturn
 Dim objWShell
 Set objWShell = CreateObject("WScript.Shell")
 
+'管理画面を起動
 cmdReturn = objWShell.Run("cmd /c MyColoring.bat --startup", vbHide, true)
 
+'管理画面「保存して起動」の場合
 If cmdReturn = 1 then
-objWShell.Run "cmd /c MainSketch3D.bat", vbNormalNoFocus, false
+    '監視ソフトを起動
+    objWShell.Run "%windir%\system32\notepad.exe", vbMinimizedNoFocus, false
+    'ProcessingSketchを起動
+    objWShell.Run "cmd /c MainSketch.bat", vbNormalNoFocus, false
 end if
 
 Set objWShell = Nothing

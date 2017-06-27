@@ -110,9 +110,8 @@ public class SketchSpace extends PApplet {
 			_logger.info("Setup...");
 			hint(ENABLE_DEPTH_SORT);
 
-			// 画面のタイトル、リサイズ許可設定
+			// 画面のタイトル
 			surface.setTitle("");
-			surface.setResizable(true);
 
 			// 画像フォルダから拡張子が「.png」のファイルを取得
 			final List<File> fileList = (List<File>) FileUtils.listFiles(new File(_properties.getProperty("dir_animated_image")), FileFilterUtils.suffixFileFilter(".png"), FileFilterUtils.trueFileFilter());
@@ -137,6 +136,9 @@ public class SketchSpace extends PApplet {
 			} else {
 				// 背景なし
 			}
+
+			// リサイズ許可設定
+			surface.setResizable(true);
 
 		} catch (Exception e) {
 			_logger.error("*** System Error!! ***", e);
