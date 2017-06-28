@@ -6,7 +6,6 @@ import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
@@ -47,6 +46,10 @@ public class SketchWalk extends PApplet {
 	private int _defaultImageWidth;	// 画像の初期幅
 
 	private  List<Character> _characterList;
+
+	private  SimpleDateFormat _sdf = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+//	private  List<Float> _intervalList = Arrays.asList(new Float[] { 60f, 75f, 90f, 105f });
+//	private  List<Float> _increaseList = Arrays.asList(new Float[] { 0.3f, 0.5f, 0.7f, 0.9f });
 
 	private boolean _recording = false;
 
@@ -180,11 +183,10 @@ public class SketchWalk extends PApplet {
 			// SIDの昇順でソート
 			_characterList.sort((p1, p2) -> Long.compare(p1._sid, p2._sid));
 			if (_characterList.size() == 1) {
-				_characterList.get(0).draw();
+				_characterList.get(0).draw(0);
 			} else if (_characterList.size() > 1) {
-				_characterList.subList(0, 2).stream()
-						.sorted(Comparator.comparing(Character::getScale))
-						.forEach(a -> a.draw());
+				_characterList.get(0).draw(0);
+				_characterList.get(1).draw(1);
 			}
 
 			if (_recording) {
@@ -358,10 +360,6 @@ public class SketchWalk extends PApplet {
 		private float _scale = 0.1f;		// 倍率
 		private float _maxScale = 0.0f;	// 最大倍率
 
-		SimpleDateFormat _sdf = new SimpleDateFormat("yyyyMMddHHmmssSSS");
-		List<Float> _intervalList = Arrays.asList(new Float[] { 60f, 75f, 90f, 105f });
-		List<Float> _increaseList = Arrays.asList(new Float[] { 0.3f, 0.5f, 0.7f, 0.9f });
-
 		public Character(File file) {
 			_logger.info("Create image " + file.getName());
 
@@ -379,36 +377,33 @@ public class SketchWalk extends PApplet {
 			_img.resize(_defaultImageWidth, 0);
 
 			// 初期設定
-			_pos = new PVector(random(width * 0.4f, width * 0.6f) - (_img.width * _scale / 2), 0, 0);
-			_interval = _intervalList.get(floor(random(0, _intervalList.size())));
+			_pos = new PVector(0, 0, 0);
+			_interval = 60f;
 			_scale = 1.0f;
 			_maxScale = ceil(height / _img.height);
 		}
 
-		public boolean update() {
+		public boolean update(int index) {
 
-			if (frameCount % _interval == 0) {
-
-				if (_scale <= _maxScale * 0.3) {
-					_pos.x = random(width * 0.4f, width * 0.6f) - (_img.width * _scale / 2);
-				} if (_scale <= _maxScale * 0.7) {
-					_pos.x = random(width * 0.3f, width * 0.7f) - (_img.width * _scale / 2);
-				} else  {
-					_pos.x = random(width * 0.2f, width * 0.8f) - (_img.width * _scale / 2);
+			if (_pos.x == 0) {
+				if (index == 0) {
+					_pos.x = width * 0.3f - (_img.width / 2);
+				} else {
+					_pos.x = width * 0.7f - (_img.width / 2);
 				}
-
+			}
+			if (frameCount % _interval == 0) {
 				if (_scale >= _maxScale) {
-					// ソートIDを再採番
+					// 設定リセット
 					_sid = Long.parseLong(_sdf.format(Calendar.getInstance().getTime()));
-					// 表示間隔を再設定
-					_interval = _intervalList.get(floor(random(0, _intervalList.size())));
-					// 倍率をリセット
+					_pos.x = 0;
+					_interval = 60f;
 					_scale = 1.0f;
 					return false;
 				}
 
 				// 倍率更新
-				_scale += _increaseList.get(floor(random(0, _increaseList.size())));
+				_scale += 0.5f;
 				if (_scale > _maxScale) {
 					_scale = _maxScale;
 				}
@@ -418,10 +413,10 @@ public class SketchWalk extends PApplet {
 			return true;
 		}
 
-		public void draw() {
+		public void draw(int index) {
 
 			// 座標更新
-			if (!update()) {
+			if (!update(index)) {
 				return;
 			}
 
@@ -429,7 +424,7 @@ public class SketchWalk extends PApplet {
 			hint(DISABLE_DEPTH_TEST);
 			pushMatrix();
 
-			translate(_pos.x, height / 2 - (_img.height * _scale / 2));
+			translate(_pos.x - (_img.width * _scale / 2), height / 2 - (_img.height * _scale / 2));
 
 			// 拡大縮小
 			scale(_scale);
@@ -441,7 +436,6 @@ public class SketchWalk extends PApplet {
 
 			// zバッファの有効化
 			hint(ENABLE_DEPTH_TEST);
-
 		}
 
 		/* ----- getter / setter -----*/
