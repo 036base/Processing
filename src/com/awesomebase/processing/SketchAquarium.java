@@ -77,7 +77,9 @@ public class SketchAquarium extends PApplet {
 			_properties.load((new InputStreamReader(new FileInputStream("conf/processing.properties"), "UTF-8")));
 
 			// 初期処理
-			initProc();
+			if (initProc() == false) {
+				exit();
+			}
 
 			if ("1".equals(_properties.getProperty("full_screen"))) {
 				// フルスクリーンモードで表示
@@ -114,7 +116,7 @@ public class SketchAquarium extends PApplet {
 			surface.setTitle("");
 
 			// 画像フォルダから拡張子が「.png」のファイルを取得
-			final List<File> fileList = (List<File>) FileUtils.listFiles(new File(_properties.getProperty("dir_animated_image")), FileFilterUtils.suffixFileFilter(".png"), FileFilterUtils.trueFileFilter());
+			final List<File> fileList = (List<File>) FileUtils.listFiles(new File(_properties.getProperty("dir_animated_image")), FileFilterUtils.suffixFileFilter(".png"), FileFilterUtils.falseFileFilter());
 
 			// キャラクタークラスを作成・初期化してリストに追加
 			_characterList = Collections.synchronizedList(new ArrayList<Character>());
@@ -167,20 +169,19 @@ public class SketchAquarium extends PApplet {
 			// zバッファの有効化
 			hint(ENABLE_DEPTH_TEST);
 
+			synchronized (_characterList) {
+				if (_characterList.size() > _maxImageCount) {
+					// UIDの昇順でソート
+					_characterList.sort((p1, p2) -> Long.compare(p1._uid, p2._uid));
+					// 古い順に削除
+					_characterList.subList(0, _characterList.size() -_maxImageCount).clear();
+					// ガベージ・コレクタを実行
+					System.gc();
+				}
 
-			if (_characterList.size() > _maxImageCount) {
-				// UIDの昇順でソート
-				_characterList.sort((p1, p2) -> Long.compare(p1._uid, p2._uid));
-				// 古い順に削除
-				_characterList.subList(0, _characterList.size() -_maxImageCount).clear();
-				// ガベージ・コレクタを実行
-				System.gc();
-			}
-
-			// Z座標位置の昇順でソートして描画
-			_characterList.stream()
-					.sorted(Comparator.comparing(Character::getPosZ))
-					.forEach(a -> a.draw());
+				// Z座標位置の昇順でソートして描画
+				_characterList.stream().sorted(Comparator.comparing(Character::getPosZ)).forEach(a -> a.draw());
+		    }
 
 			if (_recording) {
 				// フレームを保存する
@@ -278,8 +279,10 @@ public class SketchAquarium extends PApplet {
 			@Override
 			public void onFileCreate(File file) {
 				if (file.canRead() && file.getPath().endsWith(".png")) {
-					// キャラクタークラスを作成・初期化してリストに追加
-					_characterList.add(new Character(file));
+					synchronized (_characterList) {
+						// キャラクタークラスを作成・初期化してリストに追加
+						_characterList.add(new Character(file));
+				    }
 				} else {
 					_logger.warn("Could not read image file or not 'PNG' file " + file.getName());
 				}
@@ -296,8 +299,10 @@ public class SketchAquarium extends PApplet {
 
 	/**
 	 * 初期処理
+	 * @return
 	 */
-	private  void initProc() {
+	private boolean initProc() {
+		boolean ret = true;
 
 		// 背景モード
 		_backgroundMode = _properties.getProperty("background_mode");
@@ -326,20 +331,25 @@ public class SketchAquarium extends PApplet {
 		// 各ファイルパスの疎通チェック
 		chk = new File(_properties.getProperty("dir_animated_image"));
 		if (!chk.exists()) {
+			ret = false;
 			_logger.warn("Path not exists " + _properties.getProperty("dir_animated_image"));
 		}
 		if (!chk.isDirectory()) {
+			ret = false;
 			_logger.warn("Path not directory " + _properties.getProperty("dir_animated_image"));
 		}
 		chk = new File(_properties.getProperty("file_background_image"));
 		if (!chk.exists()) {
+			ret = false;
 			_logger.warn("File not exists " + _properties.getProperty("file_background_image"));
 		}
 		chk = new File(_properties.getProperty("file_background_movie"));
 		if (!chk.exists()) {
+			ret = false;
 			_logger.warn("File not exists " + _properties.getProperty("file_background_movie"));
 		}
 
+		return ret;
 	}
 
 
@@ -528,7 +538,6 @@ public class SketchAquarium extends PApplet {
 		public float getPosZ() {
 			return _pos.z + _point.z;
 		}
-
 
 	}
 
