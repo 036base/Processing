@@ -369,6 +369,7 @@ public class SketchWalk extends PApplet {
 		private Float _interval;			// 表示間隔
 		private float _scale = 0.1f;		// 倍率
 		private float _maxScale = 0.0f;	// 最大倍率
+		private int _rotateDir = 1;		// 回転向き
 
 		public Character(File file) {
 			_logger.info("Create image " + file.getName());
@@ -418,6 +419,8 @@ public class SketchWalk extends PApplet {
 					_scale = _maxScale;
 				}
 
+				_rotateDir = -_rotateDir;
+
 			}
 
 			return true;
@@ -434,13 +437,24 @@ public class SketchWalk extends PApplet {
 			hint(DISABLE_DEPTH_TEST);
 			pushMatrix();
 
-			translate(_pos.x - (_img.width * _scale / 2), height / 2 - (_img.height * _scale / 2));
+			translate(_pos.x + (_img.width / 2), height / 2);
+
+			imageMode(CENTER);
 
 			// 拡大縮小
 			scale(_scale);
 
+			// 傾き
+			if (_scale < _maxScale) {
+				translate(0, _img.height  / 2);
+				rotateZ(radians(8 * _rotateDir));
+				translate(0, -(_img.height / 2));
+			}
+
 			// 描画
 			image(_img, 0, 0);
+
+			imageMode(CORNER);
 
 			popMatrix();
 
