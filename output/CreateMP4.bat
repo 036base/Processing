@@ -33,7 +33,7 @@ set TGA_FILE=%~dp0/tga/%%06d.tga
 rem ----------------------------------
 rem ffmpegコマンド実行
 rem ----------------------------------
-ffmpeg.exe -start_number %START_NUMBER% -framerate 30 -i %TGA_FILE% -r 30 -an -vcodec libx264 -pix_fmt yuv420p %FILE_NAME%
+ffmpeg.exe -start_number %START_NUMBER% -framerate 60 -i %TGA_FILE% -r 60 -an -vcodec libx264 -pix_fmt yuv420p %FILE_NAME%
 echo;
 
 echo -------------------------------------------------------
