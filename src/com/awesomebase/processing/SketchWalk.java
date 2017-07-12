@@ -390,7 +390,7 @@ public class SketchWalk extends PApplet {
 			// 初期設定
 			_pos = new PVector(0, 0, 0);
 			_interval = 60f;
-			_scale = 1.0f;
+			_scale = 0.25f;
 			_maxScale = ceil(height / _img.height);
 		}
 
@@ -409,12 +409,12 @@ public class SketchWalk extends PApplet {
 					_sid = Long.parseLong(_sdf.format(Calendar.getInstance().getTime()));
 					_pos.x = 0;
 					_interval = 60f;
-					_scale = 1.0f;
+					_scale = 0.25f;
 					return false;
 				}
 
 				// 倍率更新
-				_scale += 0.5f;
+				_scale += 0.25f;
 				if (_scale > _maxScale) {
 					_scale = _maxScale;
 				}
