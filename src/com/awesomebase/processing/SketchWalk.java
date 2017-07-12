@@ -48,8 +48,6 @@ public class SketchWalk extends PApplet {
 	private  List<Character> _characterList;
 
 	private  SimpleDateFormat _sdf = new SimpleDateFormat("yyyyMMddHHmmssSSS");
-//	private  List<Float> _intervalList = Arrays.asList(new Float[] { 60f, 75f, 90f, 105f });
-//	private  List<Float> _increaseList = Arrays.asList(new Float[] { 0.3f, 0.5f, 0.7f, 0.9f });
 
 	private boolean _recording = false;
 
@@ -385,8 +383,8 @@ public class SketchWalk extends PApplet {
 
 			// PImage生成
 			_img = new PImage(bimg);
-			// デフォルトサイズに調整
-			_img.resize(_defaultImageWidth, 0);
+			// デフォルトサイズに調整（※SketchWalkに関しては高さ基準で調整）
+			_img.resize(0, _defaultImageWidth);
 
 			// 初期設定
 			_pos = new PVector(0, 0, 0);
