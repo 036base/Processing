@@ -43,7 +43,6 @@ public class SketchWalk extends PApplet {
 	private PImage _backgroundImg;		// 背景イメージ
 	private Movie _backgroundMov;		// 背景ムービー
 	private int _maxImageCount;		// 最大表示数
-	private int _defaultImageWidth;	// 画像の初期幅
 
 	private  List<Character> _characterList;
 
@@ -315,8 +314,6 @@ public class SketchWalk extends PApplet {
 		_backgroundMode = _properties.getProperty("background_mode");
 		// 最大表示数
 		_maxImageCount = Integer.parseInt(_properties.getProperty("max_image_count"));
-		// 画像の初期幅
-		_defaultImageWidth = Integer.parseInt(_properties.getProperty("default_image_width"));
 
 		_logger.info("--- System Settings ---------------------------------------");
 		_logger.info("full_screen             : " + _properties.getProperty("full_screen"));
@@ -328,7 +325,6 @@ public class SketchWalk extends PApplet {
 		_logger.info("file_background_image   : " + _properties.getProperty("file_background_image"));
 		_logger.info("file_background_movie   : " + _properties.getProperty("file_background_movie"));
 		_logger.info("max_image_count         : " + _properties.getProperty("max_image_count"));
-		_logger.info("default_image_width     : " + _properties.getProperty("default_image_width"));
 		_logger.info("-----------------------------------------------------------");
 
 		File chk;
@@ -367,8 +363,8 @@ public class SketchWalk extends PApplet {
 		private PImage _img;				// イメージ
 		private PVector _pos;				// 座標
 		private Float _interval;			// 表示間隔
-		private float _scale = 0.1f;		// 倍率
-		private float _maxScale = 0.0f;	// 最大倍率
+		private float _scale = 0.2f;		// 倍率
+		private float _maxScale = 1.0f;	// 最大倍率
 		private int _rotateDir = 1;		// 回転向き
 
 		public Character(File file) {
@@ -384,14 +380,14 @@ public class SketchWalk extends PApplet {
 
 			// PImage生成
 			_img = new PImage(bimg);
-			// デフォルトサイズに調整（※SketchWalkに関しては高さ基準で調整）
-			_img.resize(0, _defaultImageWidth);
+			// デフォルトサイズに調整（※スクリーンの高さを元に高さ基準で調整）
+			_img.resize(0, height - 20);
 
 			// 初期設定
 			_pos = new PVector(0, 0, 0);
-			_interval = 60f;
-			_scale = 0.25f;
-			_maxScale = ceil(height / _img.height);
+			_interval = 90f;
+			_scale = 0.2f;
+			_maxScale = 1.0f;
 		}
 
 		public boolean update(int index) {
@@ -408,13 +404,12 @@ public class SketchWalk extends PApplet {
 					// 設定リセット
 					_sid = Long.parseLong(_sdf.format(Calendar.getInstance().getTime()));
 					_pos.x = 0;
-					_interval = 60f;
-					_scale = 0.25f;
+					_scale = 0.2f;
 					return false;
 				}
 
 				// 倍率更新
-				_scale += 0.25f;
+				_scale += 0.2f;
 				if (_scale > _maxScale) {
 					_scale = _maxScale;
 				}
