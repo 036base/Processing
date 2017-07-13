@@ -46,8 +46,12 @@ public class SketchWalk extends PApplet {
 	private int _defaultImageHeight;	// 画像の初期高さ
 
 	private  List<Character> _characterList;
+	private  List<Character> _addList;
 
 	private  SimpleDateFormat _sdf = new SimpleDateFormat("yyyyMMddHHmmssSSS");
+
+	private int _resetCount;
+	private int _dispLimit;
 
 	private boolean _recording = false;
 
@@ -119,6 +123,7 @@ public class SketchWalk extends PApplet {
 			// 画像の初期高さ
 			_defaultImageHeight = ceil(height * 0.6f);
 
+
 			// 画像フォルダから拡張子が「.png」のファイルを取得
 			final List<File> fileList = (List<File>) FileUtils.listFiles(new File(_properties.getProperty("dir_animated_image")), FileFilterUtils.suffixFileFilter(".png"), FileFilterUtils.falseFileFilter());
 
@@ -142,6 +147,12 @@ public class SketchWalk extends PApplet {
 			} else {
 				// 背景なし
 			}
+
+			// 画像追加用リスト
+			_addList = Collections.synchronizedList(new ArrayList<Character>());
+
+			_resetCount = 0;
+			_dispLimit = 2;
 
 			// リサイズ許可設定
 			surface.setResizable(true);
@@ -173,25 +184,41 @@ public class SketchWalk extends PApplet {
 			// zバッファの有効化
 			hint(ENABLE_DEPTH_TEST);
 
-			synchronized (_characterList) {
-				if (_characterList.size() > _maxImageCount) {
-					// UIDの昇順でソート
-					_characterList.sort((p1, p2) -> Long.compare(p1._uid, p2._uid));
-					// 古い順に削除
-					_characterList.subList(0, _characterList.size() -_maxImageCount).clear();
-					// ガベージ・コレクタを実行
-					System.gc();
+			// 表示数リセット
+			if (_resetCount >= _dispLimit) {
+				if (_addList.size() > 0) {
+					synchronized (_addList) {
+						_characterList.addAll(_addList);
+						_addList.clear();
+					}
 				}
+				_resetCount = 0;
+				_dispLimit += 1;
+				if (_dispLimit > 4 || _dispLimit > _characterList.size()) {
+					_dispLimit = 2;
+				}
+			}
 
-				// SIDの昇順でソート
-				_characterList.sort((p1, p2) -> Long.compare(p1._sid, p2._sid));
-				if (_characterList.size() == 1) {
-					_characterList.get(0).draw(0);
-				} else if (_characterList.size() > 1) {
-					_characterList.get(0).draw(0);
-					_characterList.get(1).draw(1);
+			if (_characterList.size() > _maxImageCount) {
+				// UIDの昇順でソート
+				_characterList.sort((p1, p2) -> Long.compare(p1._uid, p2._uid));
+				// 古い順に削除
+				_characterList.subList(0, _characterList.size() -_maxImageCount).clear();
+				// ガベージ・コレクタを実行
+				System.gc();
+			}
+
+			// SIDの昇順でソート
+			_characterList.sort((p1, p2) -> Long.compare(p1._sid, p2._sid));
+			if (_characterList.size() >= _dispLimit) {
+				for (int i = 0; i < _dispLimit; i++) {
+					_characterList.get(i).draw(i);
 				}
-		    }
+			} else {
+				for (int i = 0; i < _characterList.size(); i++) {
+					_characterList.get(i).draw(i);
+				}
+			}
 
 			if (_recording) {
 				// フレームを保存する
@@ -289,9 +316,9 @@ public class SketchWalk extends PApplet {
 			@Override
 			public void onFileCreate(File file) {
 				if (file.canRead() && file.getPath().endsWith(".png")) {
-					synchronized (_characterList) {
+					synchronized (_addList) {
 						// キャラクタークラスを作成・初期化してリストに追加
-						_characterList.add(new Character(file));
+						_addList.add(new Character(file));
 				    }
 				} else {
 					_logger.warn("Could not read image file or not 'PNG' file " + file.getName());
@@ -368,8 +395,8 @@ public class SketchWalk extends PApplet {
 		private PVector _pos;				// 座標
 		private Float _interval;			// 表示間隔
 		private float _scale = 0.2f;		// 倍率
-		private float _maxScale = 1.0f;	// 最大倍率
 		private int _rotateDir = 1;		// 回転向き
+		private float _maxScale = 1.0f;	// 最大倍率
 
 		public Character(File file) {
 			_logger.info("Create image " + file.getName());
@@ -391,24 +418,52 @@ public class SketchWalk extends PApplet {
 			_pos = new PVector(0, 0, 0);
 			_interval = 90f;
 			_scale = 0.5f;
+			_rotateDir = ceil(random(2)) == 1 ? -1 : 1;
 			_maxScale = 1.0f;
 		}
 
 		public boolean update(int index) {
 
 			if (_pos.x == 0) {
-				if (index == 0) {
-					_pos.x = width * 0.3f - (_img.width / 2);
-				} else {
-					_pos.x = width * 0.7f - (_img.width / 2);
+				if (_dispLimit == 2) {
+					if (index == 0) {
+						_pos.x = width * 0.3f - (_img.width / 2);
+					} else {
+						_pos.x = width * 0.7f - (_img.width / 2);
+					}
+				} else if (_dispLimit == 3) {
+					if (index == 0) {
+						_pos.x = width * 0.25f - (_img.width / 2);
+					} else if (index == 1) {
+						_pos.x = width * 0.5f - (_img.width / 2);
+					} else {
+						_pos.x = width * 0.75f - (_img.width / 2);
+					}
+				} else if (_dispLimit == 4) {
+					if (index == 0) {
+						_pos.x = width * 0.35f - (_img.width / 2);
+						_pos.y = height * 0.2f * (-1);
+					} else if (index == 1) {
+						_pos.x = width * 0.65f - (_img.width / 2);
+						_pos.y = height * 0.2f * (-1);
+					} else if (index == 2) {
+						_pos.x = width * 0.25f - (_img.width / 2);
+						_pos.y = height * 0.25f;
+					} else {
+						_pos.x = width * 0.75f - (_img.width / 2);
+						_pos.y = height * 0.25f;
+					}
 				}
 			}
-			if (frameCount % _interval == 0) {
+			if (frameCount > 0 && frameCount % _interval == 0) {
 				if (_scale >= _maxScale) {
 					// 設定リセット
 					_sid = Long.parseLong(_sdf.format(Calendar.getInstance().getTime()));
 					_pos.x = 0;
+					_pos.y = 0;
 					_scale = 0.5f;
+					_rotateDir = ceil(random(2)) == 1 ? -1 : 1;
+					_resetCount += 1;
 					return false;
 				}
 
@@ -436,7 +491,7 @@ public class SketchWalk extends PApplet {
 			hint(DISABLE_DEPTH_TEST);
 			pushMatrix();
 
-			translate(_pos.x + (_img.width / 2), height / 2);
+			translate(_pos.x + (_img.width / 2), height / 2 + _pos.y);
 
 			imageMode(CENTER);
 
