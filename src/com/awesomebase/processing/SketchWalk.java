@@ -43,6 +43,7 @@ public class SketchWalk extends PApplet {
 	private PImage _backgroundImg;		// 背景イメージ
 	private Movie _backgroundMov;		// 背景ムービー
 	private int _maxImageCount;		// 最大表示数
+	private int _defaultImageHeight;	// 画像の初期高さ
 
 	private  List<Character> _characterList;
 
@@ -114,6 +115,9 @@ public class SketchWalk extends PApplet {
 
 			// 画面のタイトル
 			surface.setTitle("");
+
+			// 画像の初期高さ
+			_defaultImageHeight = ceil(height * 0.6f);
 
 			// 画像フォルダから拡張子が「.png」のファイルを取得
 			final List<File> fileList = (List<File>) FileUtils.listFiles(new File(_properties.getProperty("dir_animated_image")), FileFilterUtils.suffixFileFilter(".png"), FileFilterUtils.falseFileFilter());
@@ -380,13 +384,13 @@ public class SketchWalk extends PApplet {
 
 			// PImage生成
 			_img = new PImage(bimg);
-			// デフォルトサイズに調整（※スクリーンの高さを元に高さ基準で調整）
-			_img.resize(0, height - 20);
+			// デフォルトサイズに調整（※高さ基準で調整）
+			_img.resize(0, _defaultImageHeight);
 
 			// 初期設定
 			_pos = new PVector(0, 0, 0);
 			_interval = 90f;
-			_scale = 0.2f;
+			_scale = 0.5f;
 			_maxScale = 1.0f;
 		}
 
@@ -404,12 +408,12 @@ public class SketchWalk extends PApplet {
 					// 設定リセット
 					_sid = Long.parseLong(_sdf.format(Calendar.getInstance().getTime()));
 					_pos.x = 0;
-					_scale = 0.2f;
+					_scale = 0.5f;
 					return false;
 				}
 
 				// 倍率更新
-				_scale += 0.2f;
+				_scale += 0.1f;
 				if (_scale > _maxScale) {
 					_scale = _maxScale;
 				}
