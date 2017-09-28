@@ -11,6 +11,10 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
@@ -28,12 +32,12 @@ import processing.core.PVector;
 import processing.video.Movie;
 
 /**
- * Processing描画クラス（宇宙）
+ * Processing描画クラス（宇宙）案内動画付き
  *
  * @author
  *
  */
-public class SketchSpace extends PApplet {
+public class SketchSpaceEx extends PApplet {
 
 	private final Logger _logger = LogManager.getLogger();
 
@@ -45,6 +49,23 @@ public class SketchSpace extends PApplet {
 	private int _maxImageCount;		// 最大表示数
 	private int _defaultImageWidth;	// 画像の初期幅
 	private float _animationSpeed;	// デフォルトアニメーション速度
+
+	// 案内動画 関連 -------------------------------------------------
+	private Movie _guideMov;
+	private float _guideDuration;
+	private long _guideMovInterval;
+	private boolean _guidePlaying = false;
+	private ScheduledExecutorService _scheduleService;
+	private TimerTask _task = new TimerTask();
+	private ScheduledFuture<?> _scheduledFuture;
+	// ---------------------------------------------------------------
+
+	// 表示モード
+	private enum PLAY_MODE {
+		ANIMATION,		// アニメーション
+		GUIDE;			// 案内
+	}
+	private PLAY_MODE _playMode = PLAY_MODE.ANIMATION;
 
 	private  List<Character> _characterList;
 
@@ -139,6 +160,13 @@ public class SketchSpace extends PApplet {
 				// 背景なし
 			}
 
+			// 案内動画の読み込み、再生設定
+			_guideMov = new Movie(this, _properties.getProperty("file_guide_movie"));
+			_guideMov.noLoop();
+			// スケジュール設定
+			_scheduleService = Executors.newSingleThreadScheduledExecutor();
+			_scheduledFuture = _scheduleService.schedule(_task, _guideMovInterval, TimeUnit.SECONDS);
+
 			// リサイズ許可設定
 			surface.setResizable(true);
 
@@ -154,34 +182,58 @@ public class SketchSpace extends PApplet {
 	@Override
 	public void draw() {
 		try {
-			// zバッファの無効化
-			hint(DISABLE_DEPTH_TEST);
-			if ("0".equals(_backgroundMode)) {
-				// 背景画像を描画
-				image(_backgroundImg, 0, 0, width, height);
-			} else if ("1".equals(_backgroundMode)) {
-				// 背景動画を表示
-				image(_backgroundMov, 0, 0, width, height);
-			} else {
-				// 背景なし
-				background(0);
-			}
-			// zバッファの有効化
-			hint(ENABLE_DEPTH_TEST);
-
-			synchronized (_characterList) {
-				if (_characterList.size() > _maxImageCount) {
-					// UIDの昇順でソート
-					_characterList.sort((p1, p2) -> Long.compare(p1._uid, p2._uid));
-					// 古い順に削除
-					_characterList.subList(0, _characterList.size() -_maxImageCount).clear();
-					// ガベージ・コレクタを実行
-					System.gc();
+			if (_playMode == PLAY_MODE.ANIMATION) {
+				//------------------------------
+				// アニメーション
+				//------------------------------
+				// zバッファの無効化
+				hint(DISABLE_DEPTH_TEST);
+				if ("0".equals(_backgroundMode)) {
+					// 背景画像を描画
+					image(_backgroundImg, 0, 0, width, height);
+				} else if ("1".equals(_backgroundMode)) {
+					// 背景動画を表示
+					image(_backgroundMov, 0, 0, width, height);
+				} else {
+					// 背景なし
+					background(0);
 				}
+				// zバッファの有効化
+				hint(ENABLE_DEPTH_TEST);
 
-				// Z座標位置の昇順でソートして描画
-				_characterList.stream().sorted(Comparator.comparing(Character::getPosZ)).forEach(a -> a.draw());
-		    }
+				synchronized (_characterList) {
+					if (_characterList.size() > _maxImageCount) {
+						// UIDの昇順でソート
+						_characterList.sort((p1, p2) -> Long.compare(p1._uid, p2._uid));
+						// 古い順に削除
+						_characterList.subList(0, _characterList.size() -_maxImageCount).clear();
+						// ガベージ・コレクタを実行
+						System.gc();
+					}
+
+					// Z座標位置の昇順でソートして描画
+					_characterList.stream().sorted(Comparator.comparing(Character::getPosZ)).forEach(a -> a.draw());
+			    }
+			} else {
+				//------------------------------
+				// 案内動画
+				//------------------------------
+				if (_guideMov.time() < _guideDuration) {
+					// 案内動画表示
+					image(_guideMov, 0, 0, width, height);
+				} else {
+					// 案内動画を停止
+					_guideMov.stop();
+					// 背景動画を再開
+		    		if ("1".equals(_backgroundMode)) {
+						_backgroundMov.play();
+		    		}
+					// 表示モード => アニメーション
+					_playMode = PLAY_MODE.ANIMATION;
+		    		// スケジュールを再開
+					_scheduledFuture = _scheduleService.schedule(_task, 10, TimeUnit.SECONDS);
+				}
+			}
 
 			if (_recording) {
 				// フレームを保存する
@@ -312,6 +364,8 @@ public class SketchSpace extends PApplet {
 		_defaultImageWidth = Integer.parseInt(_properties.getProperty("default_image_width"));
 		// デフォルトアニメーション速度
 		_animationSpeed = Float.parseFloat(_properties.getProperty("default_animation_speed"));
+		// 案内動画の表示間隔
+		_guideMovInterval = Long.parseLong(_properties.getProperty("guide_movie_interval"));
 
 		_logger.info("--- System Settings ---------------------------------------");
 		_logger.info("full_screen             : " + _properties.getProperty("full_screen"));
@@ -325,6 +379,8 @@ public class SketchSpace extends PApplet {
 		_logger.info("max_image_count         : " + _properties.getProperty("max_image_count"));
 		_logger.info("default_image_width     : " + _properties.getProperty("default_image_width"));
 		_logger.info("default_animation_speed : " + _properties.getProperty("default_animation_speed"));
+		_logger.info("file_guide_movie        : " + _properties.getProperty("file_guide_movie"));
+		_logger.info("guide_movie_interval    : " + _properties.getProperty("guide_movie_interval"));
 		_logger.info("-----------------------------------------------------------");
 
 		File chk;
@@ -347,6 +403,11 @@ public class SketchSpace extends PApplet {
 		if (!chk.exists()) {
 			ret = false;
 			_logger.warn("File not exists " + _properties.getProperty("file_background_movie"));
+		}
+		chk = new File(_properties.getProperty("file_guide_movie"));
+		if (!chk.exists()) {
+			ret = false;
+			_logger.warn("File not exists " + _properties.getProperty("file_guide_movie"));
 		}
 
 		return ret;
@@ -567,6 +628,30 @@ public class SketchSpace extends PApplet {
 			return _pos.z + _point.z;
 		}
 
+	}
+
+	/**
+	 * タイマー処理クラス
+	 */
+	public class TimerTask extends Thread
+	{
+	    public void run()
+	    {
+	    	if (!_guidePlaying) {
+	    		// スケジュールを停止
+	    		_scheduledFuture.cancel(true);
+	    		// 背景動画を停止
+	    		if ("1".equals(_backgroundMode)) {
+		    		_backgroundMov.stop();
+	    		}
+	    		// 案内動画を再生
+	    		_guideMov.play();
+	    		// 案内動画長を取得
+				_guideDuration = _guideMov.duration();
+				// 表示モード => 案内
+				_playMode = PLAY_MODE.GUIDE;
+	    	}
+	    }
 	}
 
 }

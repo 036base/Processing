@@ -40,8 +40,8 @@ public class SketchAquarium extends PApplet {
 	private final Properties _properties = new Properties();
 
 	private String _backgroundMode;	// 背景設定
-	private PImage _backgroundImg;		// 背景イメージ
-	private Movie _backgroundMov;		// 背景ムービー
+	private PImage _backgroundImg;		// 背景画像
+	private Movie _backgroundMov;		// 背景動画
 	private int _maxImageCount;		// 最大表示数
 	private int _defaultImageWidth;	// 画像の初期幅
 	private float _animationSpeed;	// デフォルトアニメーション速度
