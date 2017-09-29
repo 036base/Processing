@@ -231,7 +231,7 @@ public class SketchSpaceEx extends PApplet {
 					// 表示モード => アニメーション
 					_playMode = PLAY_MODE.ANIMATION;
 		    		// スケジュールを再開
-					_scheduledFuture = _scheduleService.schedule(_task, 10, TimeUnit.SECONDS);
+					_scheduledFuture = _scheduleService.schedule(_task, _guideMovInterval, TimeUnit.SECONDS);
 				}
 			}
 
