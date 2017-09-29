@@ -52,7 +52,6 @@ public class SketchAquariumEx extends PApplet {
 
 	// 案内動画 関連 -------------------------------------------------
 	private Movie _guideMov;
-	private float _guideDuration;
 	private long _guideMovInterval;
 	private boolean _guidePlaying = false;
 	private ScheduledExecutorService _scheduleService;
@@ -155,14 +154,12 @@ public class SketchAquariumEx extends PApplet {
 				// 背景動画の読み込み、再生設定
 				_backgroundMov = new Movie(this, _properties.getProperty("file_background_movie"));
 				_backgroundMov.loop();	// ループ再生
-				_backgroundMov.play();	// 再生
 			} else {
 				// 背景なし
 			}
 
 			// 案内動画の読み込み、再生設定
 			_guideMov = new Movie(this, _properties.getProperty("file_guide_movie"));
-			_guideMov.noLoop();
 			// スケジュール設定
 			_scheduleService = Executors.newSingleThreadScheduledExecutor();
 			_scheduledFuture = _scheduleService.schedule(_task, _guideMovInterval, TimeUnit.SECONDS);
@@ -218,7 +215,7 @@ public class SketchAquariumEx extends PApplet {
 				//------------------------------
 				// 案内動画
 				//------------------------------
-				if (_guideMov.time() < _guideDuration) {
+				if (_guideMov.time() < _guideMov.duration()) {
 					// 案内動画表示
 					image(_guideMov, 0, 0, width, height);
 				} else {
@@ -226,7 +223,7 @@ public class SketchAquariumEx extends PApplet {
 					_guideMov.stop();
 					// 背景動画を再開
 		    		if ("1".equals(_backgroundMode)) {
-						_backgroundMov.play();
+						_backgroundMov.loop();
 		    		}
 					// 表示モード => アニメーション
 					_playMode = PLAY_MODE.ANIMATION;
@@ -619,8 +616,6 @@ public class SketchAquariumEx extends PApplet {
 	    		}
 	    		// 案内動画を再生
 	    		_guideMov.play();
-	    		// 案内動画長を取得
-				_guideDuration = _guideMov.duration();
 				// 表示モード => 案内
 				_playMode = PLAY_MODE.GUIDE;
 	    	}

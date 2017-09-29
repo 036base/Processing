@@ -134,7 +134,6 @@ public class SketchSpace extends PApplet {
 				// 背景動画の読み込み、再生設定
 				_backgroundMov = new Movie(this, _properties.getProperty("file_background_movie"));
 				_backgroundMov.loop();	// ループ再生
-				_backgroundMov.play();	// 再生
 			} else {
 				// 背景なし
 			}
