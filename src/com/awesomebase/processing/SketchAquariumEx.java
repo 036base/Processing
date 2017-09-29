@@ -32,12 +32,12 @@ import processing.core.PVector;
 import processing.video.Movie;
 
 /**
- * Processing描画クラス（宇宙）案内動画付き
+ * Processing描画クラス（水族館）案内動画付き
  *
  * @author
  *
  */
-public class SketchSpaceEx extends PApplet {
+public class SketchAquariumEx extends PApplet {
 
 	private final Logger _logger = LogManager.getLogger();
 
@@ -235,6 +235,7 @@ public class SketchSpaceEx extends PApplet {
 				}
 			}
 
+
 			if (_recording) {
 				// フレームを保存する
 				saveFrame("output/tga/######.tga");
@@ -420,25 +421,25 @@ public class SketchSpaceEx extends PApplet {
 	 */
 	public class Character {
 		private long _uid;					// ユニークID
-		private PImage _img;				// イメージ
+		private PImage _imgF;				// イメージ前部
+		private PImage _imgR;				// イメージ後部
 		private PVector _pos;				// 座標
 		private PVector _dir;				// 進行方向
 		private float _speed = 1.0f;		// 速度
+
+		private float _shakeAngle = 0;	// 後部振り角度
+		private int _shakeDir = 1;			// 後部振り向き
+		private float _maxAngle = 0;		// 後部振り最大角度
+		private float _incAngle = 0;		// 後部振り増加角度
+		private boolean _shake = false;	// 後部振り
 
 		// 周回情報
 		private PVector _point;			// 位置
 		private int _pointDir;				// 向き
 		private float _theta;				// 角度
+		private float _thetaSpeed;		// 角度増減速度
 		private float _radius;			// 半径
 		private float _radiusDir;			// 半径増減
-		// 回転情報
-		private float _rotateAngle = 0;	// 回転角度
-		private int _rotateDir = 1;		// 回転向き
-		private boolean _rotate = false;	// 回転
-		// 変形情報
-		private float _shearAngle = 0;	// 傾き角度
-		private int _shearDir = 1;			// 傾き向き
-		private boolean _shear = false;	// 傾き
 
 		private float _tempCosTheta;
 
@@ -453,9 +454,13 @@ public class SketchSpaceEx extends PApplet {
 			BufferedImage bimg = ImageUtil.Transparency(file);
 
 			// PImage生成
-			_img = new PImage(bimg);
+			PImage pimg = new PImage(bimg);
 			// デフォルトサイズに調整
-			_img.resize(_defaultImageWidth, 0);
+			pimg.resize(_defaultImageWidth, 0);
+
+			// 画像を前後に分ける
+			_imgF = pimg.get(0, 0, floor(pimg.width / 2), pimg.height);
+			_imgR = pimg.get(ceil(pimg.width / 2), 0, pimg.width, pimg.height);
 
 			// 初期設定
 			_pos = new PVector(random(width * 0.1f, width * 0.9f), random(height * 0.1f, height * 0.9f), random(-500, 100));
@@ -471,28 +476,20 @@ public class SketchSpaceEx extends PApplet {
 			}
 			_speed = _animationSpeed;
 
+			_maxAngle = ceil(random(10, 30));
+			_incAngle = ceil(random(1, 3));
+			if (ceil(random(1, 100)) < 30) {
+				_shake = true;
+			}
+
 			_point = new PVector(0, 0, 0);
+			_pointDir = ceil(random(2)) == 1 ? -1 : 1;
+
 			_theta = ceil(random(1, 180) / 5);
+			_thetaSpeed = ceil(random(2)) == 1 ? 0.01f : 0.015f;
+
 			_radius = ceil(random(0, 5)) * 100;
 			_radiusDir = 1;
-			_pointDir = 1;
-			if (ceil(random(2)) == 1) {
-				_pointDir = -1;
-			}
-
-			if (ceil(random(5)) == 1) {
-				_rotate = true;
-			}
-
-			if (ceil(random(5)) == 1) {
-				_shear = true;
-			}
-
-			// 回転と傾きは片方のみ
-			if (_rotate && _shear) {
-				_rotate = ceil(random(2)) == 1;
-				_shear = !_rotate;
-			}
 
 		}
 
@@ -518,10 +515,16 @@ public class SketchSpaceEx extends PApplet {
 			// 中心点の座標を更新
 			_pos.x += _dir.x * (_speed * 0.2f);
 			_pos.y += _dir.y * (_speed * 0.2f);
-			_pos.z += _dir.z * (_speed * 0.2f);
+			_pos.z += _dir.z * (_speed * 0.5f);
+
+			// 後部振り角度を更新
+			if (_shakeAngle > _maxAngle || _shakeAngle < -_maxAngle) {
+				_shakeDir *= -1;
+			}
+			_shakeAngle += _incAngle * _shakeDir;
 
 			// 回転角度を更新
-			_theta += 0.01 * _speed * _pointDir;
+			_theta += _thetaSpeed * _speed * _pointDir;
 
 			// 周回点の座標を更新
 			_point.x = _radius * cos(_theta);
@@ -534,21 +537,17 @@ public class SketchSpaceEx extends PApplet {
 					// 逆回転
 					_pointDir = -_pointDir;
 				}
-				if (rand % 50 == 0) {
-					// 回転
-					_rotate = !_rotate;
-					if (_rotate) {
-						_rotateDir = rand % 2 == 0 ? 1 : -1;
-					}
+				if (rand % 150 == 0) {
+					// 後部振り設定
+					_maxAngle = ceil(random(10, 30));
+					_incAngle = ceil(random(1, 3));
+					_shakeAngle = 0;
 				}
-				if (rand % 20 == 0) {
-					// 傾き
-					_shear = !_shear;
+				if (rand < 200) {
+					_shake = !_shake;
 				}
-				// 回転と傾きは片方のみ
-				if (_rotate && _shear) {
-					_rotate = ceil(random(2)) == 1;
-					_shear = !_rotate;
+				if (rand % 100 == 0) {
+					_thetaSpeed = rand % 2 == 0 ? 0.01f : 0.015f;
 				}
 			}
 			_tempCosTheta = cos(_theta);
@@ -557,19 +556,6 @@ public class SketchSpaceEx extends PApplet {
 				_radiusDir = -_radiusDir;
 			} else if (rand % 20 == 0) {
 				_radiusDir = -_radiusDir;
-			}
-
-			// 回転
-			if (_rotate) {
-				_rotateAngle += 1.0f * _rotateDir;
-			}
-
-			// 変形
-			if (_shear) {
-				_shearAngle += 0.5f * _shearDir;
-				if (_shearAngle > 25 || _shearAngle < -25) {
-					_shearDir = -_shearDir;
-				}
 			}
 
 		}
@@ -583,15 +569,7 @@ public class SketchSpaceEx extends PApplet {
 			hint(DISABLE_DEPTH_TEST);
 			pushMatrix();
 
-			// 画像中央を回転の中心にする
-			translate(_pos.x + _point.x + _img.width / 2, _pos.y + _img.height / 2, _pos.z + _point.z);
-
-
-			// 回転の中心が画像中央なので、画像描画原点も画像中央にする
-			// こうすると、(0,0)に配置すれば期待した位置に画像が置ける
-			// これをしないと、image()命令で配置する座標計算が面倒になる
-			imageMode(CENTER);
-
+			translate(_pos.x + _point.x, _pos.y, _pos.z + _point.z);
 			rotateY(-_theta);
 			if (_pointDir > 0) {
 				rotateY(90);
@@ -599,23 +577,18 @@ public class SketchSpaceEx extends PApplet {
 				rotateY(-90);
 			}
 
-			// 回転
-			if (_rotate) {
-				rotate(radians(_rotateAngle));
+			// 前部の描画
+			image(_imgF, 0, 0);
+
+			pushMatrix();
+			translate(_imgF.width, 0, 0);
+			if (_shake) {
+				// 後部だけヒラヒラさせる
+				rotateY(radians(_shakeAngle));
 			}
-
-			// 傾き
-			if (_shear) {
-				shearX(radians(_shearAngle));
-				shearY(radians(_shearAngle));
-			}
-
-			// 描画
-			image(_img, 0, 0);
-
-
-			// 画像描画原点を元（画像の左上隅）に戻す
-			imageMode(CORNER);
+			// 後部の描画
+			image(_imgR, 0, 0);
+			popMatrix();
 
 			popMatrix();
 			// zバッファの有効化
