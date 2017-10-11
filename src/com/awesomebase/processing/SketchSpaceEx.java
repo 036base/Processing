@@ -52,11 +52,12 @@ public class SketchSpaceEx extends PApplet {
 
 	// 案内動画 関連 -------------------------------------------------
 	private Movie _guideMov;
-	private long _guideMovInterval;
+	private long _guideMovInterval = 0;
 	private boolean _guidePlaying = false;
 	private ScheduledExecutorService _scheduleService;
 	private GuideTimerTask _task = new GuideTimerTask();
 	private ScheduledFuture<?> _scheduledFuture;
+	private float _readFrame = 0;
 	// ---------------------------------------------------------------
 
 	// 表示モード
@@ -180,6 +181,8 @@ public class SketchSpaceEx extends PApplet {
 	@Override
 	public void draw() {
 		try {
+			float drawFrame = frameCount;
+
 			if (_playMode == PLAY_MODE.ANIMATION) {
 				//------------------------------
 				// アニメーション
@@ -216,10 +219,9 @@ public class SketchSpaceEx extends PApplet {
 				//------------------------------
 				// 案内動画
 				//------------------------------
-				if (_guideMov.time() < _guideMov.duration()) {
-					// 案内動画表示
-					image(_guideMov, 0, 0, width, height);
-				} else {
+				// ビデオフレームが一定数以上更新されていなければ停止とみなす
+				//   ※一定数：フレームレート×2（60fpsの場合2秒）
+				if ((drawFrame - _readFrame) > frameRate *  2) {
 					// 案内動画を停止
 					_guideMov.stop();
 					// 背景動画を再開
@@ -230,8 +232,11 @@ public class SketchSpaceEx extends PApplet {
 					_playMode = PLAY_MODE.ANIMATION;
 		    		// スケジュールを再開
 					_scheduledFuture = _scheduleService.schedule(_task, _guideMovInterval, TimeUnit.SECONDS);
+				} else {
+					image(_guideMov, 0, 0, width, height);
 				}
 			}
+
 
 			if (_recording) {
 				// フレームを保存する
@@ -308,6 +313,7 @@ public class SketchSpaceEx extends PApplet {
 	 */
 	public void movieEvent(Movie m) {
 		m.read();
+		_readFrame = frameCount;
 	}
 
 
